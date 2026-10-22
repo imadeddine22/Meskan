@@ -97,8 +97,11 @@ export default function Navbar() {
     { label: t.navSales || 'Ventes', href: '/sales' },
     { label: 'Reels', href: '/reels' },
     { label: t.navDestinations, href: '/destinations' },
-    // land owners & investors (pricing stays in the footer, the menu is full at 1280 px)
+    // land owners & investors
     { label: 'Investir', href: '/investir' },
+    // plans for hosts and sellers: phone menu only (the computer menu is full at 1280 px; computers
+    // have it in the home quick-access list and the account menu)
+    { label: 'Tarifs', href: '/pricing', mobileOnly: true },
     // the contact form goes straight to the site owner (Admin → Messages)
     { label: 'Contact', href: '/contact' },
   ];
@@ -114,7 +117,7 @@ export default function Navbar() {
 
         {/* Center: Navigation Links */}
         <nav className="hidden xl:flex items-center gap-1 bg-gray-50/80 p-1.5 rounded-full border border-gray-200/60">
-          {navLinks.map((link) => {
+          {navLinks.filter((l) => !l.mobileOnly).map((link) => {
             const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
             return (
               <Link

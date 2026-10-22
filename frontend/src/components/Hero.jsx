@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Search, MapPin, X, Tag, House, BedDouble, Landmark, ChevronDown } from 'lucide-react';
+import { Search, MapPin, X, Tag, House, BedDouble, Landmark, ChevronDown, BadgeDollarSign } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import { QUICK_AREAS } from '@/lib/data';
 import { WILAYAS } from '@/lib/wilayas';
@@ -15,6 +15,7 @@ const SHORTCUTS = [
   { href: '/houses', key: 'navHouses', icon: House },
   { href: '/hotels', key: 'navHotels', icon: BedDouble },
   { href: '/investir', key: 'Investir', icon: Landmark, highlight: true },
+  { href: '/pricing', key: 'Tarifs', icon: BadgeDollarSign },
 ];
 
 /**
