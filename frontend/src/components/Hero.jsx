@@ -1,12 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Search, MapPin, X } from 'lucide-react';
+import { Search, MapPin, X, Tag, House, BedDouble, Landmark } from 'lucide-react';
+import Link from '@/components/LocaleLink';
 import { QUICK_AREAS } from '@/lib/data';
 import { WILAYAS } from '@/lib/wilayas';
 import { useT } from '@/lib/i18n/useT';
 
 const SEARCH_DELAY_MS = 350;
+
+// Shortcuts to the main sections, computers only (phones have the menu)
+const SHORTCUTS = [
+  { href: '/sales', key: 'navSales', icon: Tag },
+  { href: '/houses', key: 'navHouses', icon: House },
+  { href: '/hotels', key: 'navHotels', icon: BedDouble },
+  { href: '/investir', key: 'Investir', icon: Landmark, highlight: true },
+];
 
 /**
  * Home search. Filters the hotels / houses / sales sections of the home page
@@ -57,7 +66,29 @@ export default function Hero({ value = '', onSearch }) {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-white to-gray-50 pb-16 pt-12 sm:pt-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+        {/* Shortcuts: a column in the empty left area on wide screens, a row above the title on smaller computers */}
+        <nav
+          aria-label={t('Accès rapide')}
+          className="mb-8 hidden flex-wrap justify-center gap-2 lg:flex xl:absolute xl:left-4 xl:top-0 xl:mb-0 xl:w-40 xl:flex-col xl:flex-nowrap"
+        >
+          {SHORTCUTS.map(({ href, key, icon: Icon, highlight }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`group inline-flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-bold shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md ${
+                highlight ? 'text-[#0b2a3a] ring-transparent' : 'bg-white text-ink ring-gray-100 hover:ring-brand-200'
+              }`}
+              style={highlight ? { background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' } : undefined}
+            >
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${highlight ? 'bg-white/30' : 'bg-brand-50 text-brand-600'}`}>
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="flex-1 whitespace-nowrap xl:text-[13px]">{t[key] || t(key)}</span>
+            </Link>
+          ))}
+        </nav>
+
         {/* Title */}
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-black tracking-tight text-ink sm:text-5xl lg:text-6xl">
