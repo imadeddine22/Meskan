@@ -18,8 +18,8 @@ const FAQS = [
     a: "Oui, absolument. Vous pouvez mettre à niveau, rétrograder ou annuler votre abonnement à tout moment depuis vos paramètres de profil. En cas d'annulation, votre abonnement reste actif jusqu'à la fin de la période facturée."
   },
   {
-    q: "Quelle est la différence entre la facturation mensuelle et annuelle ?",
-    a: "L'abonnement annuel vous permet d'économiser l'équivalent de 2 mois d'abonnement gratuit (soit environ 17% de réduction sur l'année) et vous évite d'avoir à renouveler chaque mois."
+    q: "Quelle est la durée de chaque formule ?",
+    a: "Starter : 15 jours gratuits pour essayer Meskan. Growth : abonnement mensuel. Pro : abonnement annuel, sans renouvellement chaque mois."
   },
   {
     q: "Y a-t-il des frais ou commissions supplémentaires sur mes réservations ?",
@@ -76,7 +76,7 @@ function FaqItem({ q, a }) {
 
 export default function PricingPage() {
   const { t } = useT();
-  const [billing, setBilling] = useState('monthly'); // 'monthly' | 'yearly'
+  // Each plan has its own period: Starter = 15 days free, Growth = monthly, Pro = yearly
   const [prices, setPrices] = useState({
     growthMonthly: 2900,
     growthYearly: 29000,
@@ -118,28 +118,6 @@ export default function PricingPage() {
             {t('Start free, scale as you grow. Choose the plan that matches your customer engagement goals. Aucune commission sur vos gains.')}
           </p>
 
-          {/* Billing Switch Toggle */}
-          <div className="mt-10 inline-flex items-center gap-3 bg-slate-100 p-1.5 rounded-full border border-slate-200 shadow-sm">
-            <button
-              onClick={() => setBilling('monthly')}
-              className={`rounded-full px-5 py-2 text-xs font-black transition-all ${
-                billing === 'monthly' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {t('Mensuel')}
-            </button>
-            <button
-              onClick={() => setBilling('yearly')}
-              className={`rounded-full px-5 py-2 text-xs font-black transition-all flex items-center gap-1.5 ${
-                billing === 'yearly' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {t('Annuel')}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${billing === 'yearly' ? 'bg-white text-brand-700' : 'bg-brand-100 text-brand-700'}`}>
-                -17%
-              </span>
-            </button>
-          </div>
         </div>
       </section>
 
@@ -171,8 +149,9 @@ export default function PricingPage() {
                 <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('Best for small teams getting started.')}</p>
                 <div className="flex items-baseline gap-1 mt-6">
                   <span className="text-4xl font-black text-slate-800 tracking-tight">0</span>
-                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
+                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {t('15 jours')}</span>
                 </div>
+                <p className="mt-2 inline-block rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{t('Essai gratuit de 15 jours')}</p>
               </div>
               <Link
                 href="/register"
@@ -195,16 +174,16 @@ export default function PricingPage() {
                 <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('For scaling teams ready to automate journeys.')}</p>
                 <div className="flex items-baseline gap-1 mt-6">
                   <span className="text-4xl font-black text-slate-800 tracking-tight">
-                    {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)}
+                    {new Intl.NumberFormat('fr-DZ').format(prices.growthMonthly)}
                   </span>
-                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
+                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {t('mois')}</span>
                 </div>
               </div>
               <Link
                 href="/register?plan=growth"
                 className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-white bg-slate-900 hover:bg-slate-800 shadow-md transition"
               >
-                {t('Start free trial')}
+                {t('Choisir ce plan')}
               </Link>
             </div>
 
@@ -218,9 +197,9 @@ export default function PricingPage() {
                 <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('For businesses that need customization.')}</p>
                 <div className="flex items-baseline gap-1 mt-6">
                   <span className="text-4xl font-black text-slate-800 tracking-tight">
-                    {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)}
+                    {new Intl.NumberFormat('fr-DZ').format(prices.proYearly)}
                   </span>
-                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
+                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {t('an')}</span>
                 </div>
               </div>
               <Link
@@ -270,7 +249,8 @@ export default function PricingPage() {
           {/* Card 1 */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Starter Plan')}</h3>
-            <p className="text-4xl font-black text-slate-800 mt-2">{t('0 DZD')} <span className="text-xs text-slate-400 font-bold">/ {billing === 'monthly' ? t('mois') : 'an'}</span></p>
+            <p className="text-4xl font-black text-slate-800 mt-2">{t('0 DZD')} <span className="text-xs text-slate-400 font-bold">/ {t('15 jours')}</span></p>
+            <p className="mt-2 inline-block rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{t('Essai gratuit de 15 jours')}</p>
             <ul className="mt-4 space-y-2">
               <li className="text-xs text-slate-600 font-semibold">{t('1 établissement')}</li>
               <li className="text-xs text-slate-600 font-semibold">{t('5 photos max')}</li>
@@ -285,8 +265,8 @@ export default function PricingPage() {
             <span className="absolute -top-3.5 right-6 bg-teal-500 text-white font-extrabold text-[8px] uppercase px-3 py-0.5 rounded-full">{t('Most Popular')}</span>
             <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Growth Plan')}</h3>
             <p className="text-4xl font-black text-slate-800 mt-2">
-              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)} {t('DZD')}
-              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? t('mois') : 'an'}</span>
+              {new Intl.NumberFormat('fr-DZ').format(prices.growthMonthly)} {t('DZD')}
+              <span className="text-xs text-slate-400 font-bold"> / {t('mois')}</span>
             </p>
             <ul className="mt-4 space-y-2">
               <li className="text-xs text-slate-600 font-semibold">{t('Jusqu\'à 5 établissements')}</li>
@@ -295,15 +275,15 @@ export default function PricingPage() {
               <li className="text-xs text-slate-600 font-semibold">{t('Support prioritaire 7j/7')}</li>
             </ul>
             <Link href="/register?plan=growth" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-white bg-slate-900">
-              {t('Start free trial')}
+              {t('Choisir ce plan')}
             </Link>
           </div>
           {/* Card 3 */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Pro Plan')}</h3>
             <p className="text-4xl font-black text-slate-800 mt-2">
-              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)} {t('DZD')}
-              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? t('mois') : 'an'}</span>
+              {new Intl.NumberFormat('fr-DZ').format(prices.proYearly)} {t('DZD')}
+              <span className="text-xs text-slate-400 font-bold"> / {t('an')}</span>
             </p>
             <ul className="mt-4 space-y-2">
               <li className="text-xs text-slate-600 font-semibold">{t('Établissements illimités')}</li>
