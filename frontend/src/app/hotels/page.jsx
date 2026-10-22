@@ -76,7 +76,7 @@ export default function HotelsPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* List: full width, content centred (the map was removed at the owner's request) */}
         <div className="flex w-full flex-col overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl">
+          <div className="mx-auto w-full max-w-7xl">
           
           {/* Header & Filters (Sticky) */}
           <div className="sticky top-0 z-10 border-b border-gray-100 bg-white p-4 sm:p-6 shadow-sm">
@@ -156,12 +156,11 @@ export default function HotelsPage() {
             ) : hotels.length === 0 ? (
               <p className="py-10 text-center text-gray-400">{t('Aucun hôtel trouvé pour ces critères.')}</p>
             ) : (
-              <div className="flex flex-col gap-5">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {hotels.map((h) => (
                   <HotelCard 
                     key={h._id || h.id} 
-                    hotel={normalize(h)} 
-                    list={true}
+                    hotel={normalize(h)}
                   />
                 ))}
               </div>
