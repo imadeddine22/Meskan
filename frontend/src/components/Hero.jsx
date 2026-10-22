@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Search, MapPin, X, Tag, House, BedDouble, Landmark } from 'lucide-react';
+import { Search, MapPin, X, Tag, House, BedDouble, Landmark, ChevronDown } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import { QUICK_AREAS } from '@/lib/data';
 import { WILAYAS } from '@/lib/wilayas';
@@ -25,6 +25,7 @@ export default function Hero({ value = '', onSearch }) {
   const { t, lang } = useT();
 
   const [text, setText] = useState(value);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false); // quick-access buttons, opened with the arrow
   const timer = useRef(null);
   const lastSent = useRef(value);
 
@@ -67,27 +68,44 @@ export default function Hero({ value = '', onSearch }) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-white to-gray-50 pb-16 pt-12 sm:pt-20">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-        {/* Shortcuts: a column in the empty left area on wide screens, a row above the title on smaller computers */}
-        <nav
-          aria-label={t('Accès rapide')}
-          className="mb-8 hidden flex-wrap justify-center gap-2 lg:flex xl:absolute xl:left-4 xl:top-0 xl:mb-0 xl:w-40 xl:flex-col xl:flex-nowrap"
-        >
-          {SHORTCUTS.map(({ href, key, icon: Icon, highlight }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`group inline-flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-bold shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md ${
-                highlight ? 'text-[#0b2a3a] ring-transparent' : 'bg-white text-ink ring-gray-100 hover:ring-brand-200'
-              }`}
-              style={highlight ? { background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' } : undefined}
+        {/* Shortcuts (computers only): hidden behind an arrow; when opened, a column in the empty left
+            area on wide screens, a row above the title on smaller computers */}
+        <div className="mb-8 hidden flex-col items-center gap-2 lg:flex xl:absolute xl:left-4 xl:top-0 xl:mb-0 xl:w-40 xl:items-start">
+          <button
+            type="button"
+            onClick={() => setShortcutsOpen((o) => !o)}
+            aria-expanded={shortcutsOpen}
+            aria-controls="hero-shortcuts"
+            aria-label={shortcutsOpen ? t('Masquer l’accès rapide') : t('Accès rapide')}
+            title={t('Accès rapide')}
+            className="grid h-10 w-10 place-items-center rounded-full bg-white text-gray-500 shadow-sm ring-1 ring-gray-200 transition hover:text-ink hover:shadow-md"
+          >
+            <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${shortcutsOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+          </button>
+          {shortcutsOpen && (
+            <nav
+              id="hero-shortcuts"
+              aria-label={t('Accès rapide')}
+              className="flex flex-wrap justify-center gap-2 animate-[welcome-fade_.2s_ease-out] xl:w-full xl:flex-col xl:flex-nowrap"
             >
-              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${highlight ? 'bg-white/30' : 'bg-brand-50 text-brand-600'}`}>
-                <Icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span className="flex-1 whitespace-nowrap xl:text-[13px]">{t[key] || t(key)}</span>
-            </Link>
-          ))}
-        </nav>
+              {SHORTCUTS.map(({ href, key, icon: Icon, highlight }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group inline-flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-bold shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md ${
+                    highlight ? 'text-[#0b2a3a] ring-transparent' : 'bg-white text-ink ring-gray-100 hover:ring-brand-200'
+                  }`}
+                  style={highlight ? { background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' } : undefined}
+                >
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${highlight ? 'bg-white/30' : 'bg-brand-50 text-brand-600'}`}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="flex-1 whitespace-nowrap xl:text-[13px]">{t[key] || t(key)}</span>
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
 
         {/* Title */}
         <div className="mx-auto max-w-3xl text-center">
