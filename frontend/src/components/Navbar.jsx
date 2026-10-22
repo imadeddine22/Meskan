@@ -91,7 +91,8 @@ export default function Navbar() {
   const dashHref = spaceHome(user?.role);
 
   const navLinks = [
-    { label: t.navHome, href: '/' },
+    // the logo already goes home: on computers the menu keeps that room for the pricing page
+    { label: t.navHome, href: '/', mobileOnly: true },
     { label: t.navHotels, href: '/hotels' },
     { label: t.navHouses, href: '/houses' },
     { label: t.navSales || 'Ventes', href: '/sales' },
@@ -99,9 +100,8 @@ export default function Navbar() {
     { label: t.navDestinations, href: '/destinations' },
     // land owners & investors
     { label: 'Investir', href: '/investir' },
-    // plans for hosts and sellers: phone menu only (the computer menu is full at 1280 px; computers
-    // have it in the home quick-access list and the account menu)
-    { label: 'Tarifs', href: '/pricing', mobileOnly: true },
+    // plans for hosts and sellers
+    { label: 'Tarifs', href: '/pricing' },
     // the contact form goes straight to the site owner (Admin → Messages)
     { label: 'Contact', href: '/contact' },
   ];
