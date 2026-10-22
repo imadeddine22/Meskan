@@ -6,6 +6,7 @@ import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
 import { SPACE_ROLES, spaceHome } from '@/lib/spaces';
+import PasswordInput from '@/components/PasswordInput';
 import GoogleSignIn from '@/components/GoogleSignIn';
 
 import { useT } from '@/lib/i18n/useT';
@@ -96,14 +97,17 @@ const AUTOCOMPLETE = { email: 'email', password: 'new-password', tel: 'tel' };
 
 function Field({ label, value, onChange, type = 'text', required = true }) {
   const id = useId();
+  // password: with the eye button to show / hide it
+  const isPassword = type === 'password';
+  const Input = isPassword ? PasswordInput : 'input';
   return (
     <div>
       <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <input
+      <Input
         id={id}
-        type={type}
+        {...(isPassword ? {} : { type })}
         autoComplete={AUTOCOMPLETE[type]}
-        minLength={type === 'password' ? 6 : undefined}
+        minLength={isPassword ? 6 : undefined}
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
