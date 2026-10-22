@@ -82,20 +82,31 @@ export default function Hero({ value = '', onSearch }) {
           >
             <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${shortcutsOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
-          {shortcutsOpen && (
+          {/* Always rendered so it can animate both ways: the list unfolds (grid rows 0fr → 1fr)
+              and the buttons fade / slide in one after another */}
+          <div
+            className={`grid w-full transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${
+              shortcutsOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
+            aria-hidden={!shortcutsOpen}
+          >
             <nav
               id="hero-shortcuts"
               aria-label={t('Accès rapide')}
-              className="flex flex-wrap justify-center gap-2 animate-[welcome-fade_.2s_ease-out] xl:w-full xl:flex-col xl:flex-nowrap"
+              className="flex min-h-0 flex-wrap justify-center gap-2 overflow-hidden p-1 xl:flex-col xl:flex-nowrap"
             >
-              {SHORTCUTS.map(({ href, key, icon: Icon, highlight }) => (
+              {SHORTCUTS.map(({ href, key, icon: Icon, highlight }, i) => (
                 <Link
                   key={href}
                   href={href}
-                  className={`group inline-flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-bold shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md ${
-                    highlight ? 'text-[#0b2a3a] ring-transparent' : 'bg-white text-ink ring-gray-100 hover:ring-brand-200'
-                  }`}
-                  style={highlight ? { background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' } : undefined}
+                  tabIndex={shortcutsOpen ? undefined : -1}
+                  className={`group inline-flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-bold shadow-sm ring-1 transition duration-300 ease-out hover:shadow-md motion-reduce:transition-none ${
+                    shortcutsOpen ? 'translate-y-0 opacity-100 hover:-translate-y-0.5' : '-translate-y-2 opacity-0'
+                  } ${highlight ? 'text-[#0b2a3a] ring-transparent' : 'bg-white text-ink ring-gray-100 hover:ring-brand-200'}`}
+                  style={{
+                    ...(highlight ? { background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' } : {}),
+                    transitionDelay: shortcutsOpen ? `${80 + i * 60}ms` : '0ms', // one after another when opening
+                  }}
                 >
                   <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${highlight ? 'bg-white/30' : 'bg-brand-50 text-brand-600'}`}>
                     <Icon className="h-4 w-4" aria-hidden="true" />
@@ -104,7 +115,7 @@ export default function Hero({ value = '', onSearch }) {
                 </Link>
               ))}
             </nav>
-          )}
+          </div>
         </div>
 
         {/* Title */}
