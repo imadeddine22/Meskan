@@ -78,9 +78,12 @@ export default function Hero({ value = '', onSearch }) {
             aria-controls="hero-shortcuts"
             aria-label={shortcutsOpen ? t('Masquer l’accès rapide') : t('Accès rapide')}
             title={t('Accès rapide')}
-            className="grid h-10 w-10 place-items-center rounded-full bg-white text-gray-500 shadow-sm ring-1 ring-gray-200 transition hover:text-ink hover:shadow-md"
+            className="relative grid h-11 w-11 place-items-center rounded-full text-white shadow-lg ring-4 ring-white transition hover:scale-105 hover:shadow-xl"
+            style={{ background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' }}
           >
-            <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${shortcutsOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+            {/* soft pulse while closed, so visitors notice it */}
+            {!shortcutsOpen && <span aria-hidden="true" className="absolute inset-0 rounded-full bg-[#0DD5C4]/40 motion-safe:animate-ping" />}
+            <ChevronDown className={`relative h-6 w-6 transition-transform duration-200 ${shortcutsOpen ? 'rotate-180' : ''}`} strokeWidth={2.5} aria-hidden="true" />
           </button>
           {/* Always rendered so it can animate both ways: the list unfolds (grid rows 0fr → 1fr)
               and the buttons fade / slide in one after another */}
