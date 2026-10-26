@@ -1653,5 +1653,11 @@
   "Essai gratuit de 15 jours": "تجربة مجانية لمدة 15 يومًا",
   "Quelle est la durée de chaque formule ?": "ما هي مدة كل باقة؟",
   "Starter : 15 jours gratuits pour essayer Meskan. Growth : abonnement mensuel. Pro : abonnement annuel, sans renouvellement chaque mois.": "باقة البداية: 15 يومًا مجانًا لتجربة مسكن. باقة النمو: اشتراك شهري. الباقة الاحترافية: اشتراك سنوي بدون تجديد كل شهر.",
-  "Choisir ce plan": "اختر هذه الباقة"
+  "Choisir ce plan": "اختر هذه الباقة",
+  "Gratuit": "مجاني",
+  "Gratuit pendant le lancement": "مجاني خلال فترة الإطلاق",
+  "✦ Tous les plans sont gratuits pendant le lancement": "✦ جميع الباقات مجانية خلال فترة الإطلاق",
+  "Les plans sont-ils vraiment gratuits ?": "هل الباقات مجانية فعلًا؟",
+  "Oui. Pendant le lancement de Meskan, tous les plans (Starter, Growth et Pro) sont gratuits, sans aucun paiement. Nous vous préviendrons à l'avance avant toute mise en place d'un abonnement payant.": "نعم. خلال فترة إطلاق مسكن، جميع الباقات (البداية، النمو والاحترافية) مجانية بدون أي دفع. سنُعلمك مسبقًا قبل تفعيل أي اشتراك مدفوع.",
+  "Non. Meskan ne prélève aucune commission sur vos réservations : vous gardez 100% de vos gains.": "لا. مسكن لا يأخذ أي عمولة على حجوزاتك: تحتفظ بـ 100% من أرباحك."
 }

@@ -13,6 +13,8 @@ export async function GET() {
 Les voyageurs réservent gratuitement ; les formules ci-dessous concernent les hôteliers, propriétaires et vendeurs qui publient des annonces. Prix en dinars algériens (DZD).
 Page complète : ${SITE_URL}/pricing
 
+**Lancement : tous les plans (Starter, Growth et Pro) sont actuellement gratuits, sans aucun paiement.** Les prix ci-dessous sont les tarifs prévus après la période de lancement.
+
 ## Starter
 - Prix : 0 DZD
 - Établissements : 1
