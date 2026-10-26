@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle, Trash2, ExternalLink, Landmark, XCircle } from 'lucide-react';
+import { CheckCircle, Trash2, ExternalLink, Landmark, XCircle, Phone, Mail, ShieldCheck, Check } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { formatArea, assetLabel, documentLabel } from '@/lib/projects';
+import { formatArea, assetLabel, documentLabel, isCapital, budgetRange, areaRange, placeLabel } from '@/lib/projects';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
@@ -13,6 +13,7 @@ const FILTERS = [
   { key: 'pending', label: 'En attente' },
   { key: 'approved', label: 'Publiés' },
   { key: 'rejected', label: 'Refusés' },
+  { key: 'requests', label: 'Demandes reçues' }, // requests from visitors: Meskan puts the two parties in touch
 ];
 const REASONS = [
   'Photos du bien manquantes ou floues',
@@ -34,7 +35,13 @@ export default function AdminProjectsPage() {
   const [rejecting, setRejecting] = useState(null);
   const [reason, setReason] = useState('');
 
+  // a link from the request e-mail opens the requests tab directly
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('status') === 'requests') setStatus('requests');
+  }, []);
+
   const load = async () => {
+    if (status === 'requests') return setLoading(false);
     setLoading(true);
     try {
       const { data } = await api.get('/admin/projects', { params: { status }, localize: false });
@@ -77,6 +84,8 @@ export default function AdminProjectsPage() {
         <p className="admin-page-subtitle">{pending > 0 ? t('{n} projet(s) en attente de validation', { n: pending }) : t('Aucun projet en attente')}</p>
       </div>
 
+      <MeskanContact />
+
       <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={t('Filtrer les projets')}>
         {FILTERS.map((f) => (
           <button
@@ -92,7 +101,9 @@ export default function AdminProjectsPage() {
         ))}
       </div>
 
-      {loading ? (
+      {status === 'requests' ? (
+        <InterestsPanel />
+      ) : loading ? (
         <p className="text-gray-500">{t('Chargement...')}</p>
       ) : error ? (
         <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-red-600">{error}</p>
@@ -104,15 +115,27 @@ export default function AdminProjectsPage() {
             <article key={p._id} className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card">
               {p.images?.[0] && <img src={getImageUrl(p.images[0].url)} alt="" className="aspect-[16/8] w-full object-cover" />}
               <div className="flex flex-1 flex-col p-4">
-                <p className="text-xs text-gray-400">{p.reference} · {new Date(p.updatedAt).toLocaleString(dateLocale())}</p>
-                <p className="font-bold text-ink">{p.title}</p>
-                <p className="text-sm text-gray-500">
-                  {t(p.city)}, {t(p.wilaya)} · {assetLabel(p, t)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {documentLabel(p, t)}
+                <p className="text-xs text-gray-400">
+                  <span className="me-1 rounded-full bg-cyan-50 px-2 py-0.5 font-bold text-cyan-800">{isCapital(p) ? t('Investisseur cherche un bien') : t('Bien cherchant un investisseur')}</span>
+                  {p.reference} · {new Date(p.updatedAt).toLocaleString(dateLocale())}
                 </p>
-                <p className="text-sm font-semibold text-gray-700">{p.budget ? formatDZD(p.budget) : t('Budget à définir')}{p.ownerShare != null ? ` · ${t('Part du propriétaire')} ${p.ownerShare} %` : ''}</p>
+                <p className="font-bold text-ink">{p.title}</p>
+                {isCapital(p) ? (
+                  <>
+                    <p className="text-sm text-gray-500">{placeLabel(p, t)} · {assetLabel(p, t)} · {areaRange(p, t, lang)} · {t(p.projectType)} · {t(p.partnership)}</p>
+                    <p className="text-sm font-semibold text-gray-700">{t('Budget')} : {budgetRange(p, t, formatDZD)}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-500">
+                      {t(p.city)}, {t(p.wilaya)} · {assetLabel(p, t)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {documentLabel(p, t)}
+                    </p>
+                    <p className="text-sm font-semibold text-gray-700">{p.budget ? formatDZD(p.budget) : t('Budget à définir')}{p.ownerShare != null ? ` · ${t('Part du propriétaire')} ${p.ownerShare} %` : ''}</p>
+                  </>
+                )}
                 {p.description && <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-gray-600">{p.description}</p>}
-                {/* Ownership document photos: private, for checking the property before publishing */}
-                <div className="mt-3 rounded-xl bg-slate-50 p-3">
+                {/* Ownership document photos: private, for checking the property before publishing (none for an investor's search) */}
+                {!isCapital(p) && <div className="mt-3 rounded-xl bg-slate-50 p-3">
                   <p className="text-xs font-bold text-gray-600">{t('Document de propriété')} : {documentLabel(p, t)}</p>
                   {p.documentImages?.length ? (
                     <div className="mt-2 flex gap-2">
@@ -125,8 +148,14 @@ export default function AdminProjectsPage() {
                   ) : (
                     <p className="mt-1 text-xs text-amber-700">{t('Aucune photo du document.')}</p>
                   )}
-                </div>
+                </div>}
                 <p className="mt-2 text-xs text-gray-500">{p.owner?.fullName} · {p.owner?.email}{p.owner?.phone ? ` · ${p.owner.phone}` : ''}</p>
+                {/* the publisher's contact for this listing: private, seen only here */}
+                {(p.contactPhone || p.contactEmail) && (
+                  <p className="mt-1 text-xs font-semibold text-gray-700">
+                    {t('Contact privé de l’annonce :')} <span dir="ltr">{[p.contactPhone, p.contactEmail].filter(Boolean).join(' · ')}</span>
+                  </p>
+                )}
                 {p.status === 'rejected' && p.rejectionReason && (
                   <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><strong>{t('Motif du refus :')}</strong> {p.rejectionReason}</p>
                 )}
@@ -181,5 +210,127 @@ export default function AdminProjectsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Meskan's own phone / email shown on every investment project instead of the publishers' contacts. */
+function MeskanContact() {
+  const { t } = useT();
+  const [form, setForm] = useState({ phone: '', email: '' });
+  const [state, setState] = useState(''); // '' | 'saving' | 'saved' | error message
+
+  useEffect(() => {
+    api.get('/pricing/prices').then(({ data }) => setForm({ phone: data.settings?.investContact?.phone || '', email: data.settings?.investContact?.email || '' })).catch(() => {});
+  }, []);
+
+  const save = async (e) => {
+    e.preventDefault();
+    setState('saving');
+    try {
+      await api.put('/pricing/prices', { investContact: form });
+      setState('saved');
+    } catch (err) {
+      setState(err.message);
+    }
+  };
+
+  const input = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00B3D2]';
+  return (
+    <form onSubmit={save} className="mb-5 rounded-2xl bg-white p-4 shadow-card">
+      <p className="flex items-center gap-1.5 font-bold text-ink">
+        <ShieldCheck className="h-5 w-5 text-[#00B3D2]" aria-hidden="true" /> {t('Vos coordonnées d’intermédiaire')}
+      </p>
+      <p className="mt-0.5 text-xs text-gray-500">{t('Affichées sur tous les projets à la place des coordonnées des propriétaires et des investisseurs, qui restent privées.')}</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <label className="text-xs font-semibold text-gray-600">
+          {t('Téléphone / WhatsApp')}
+          <input value={form.phone} onChange={(e) => { setForm({ ...form, phone: e.target.value }); setState(''); }} type="tel" dir="ltr" placeholder="0770 00 00 00" className={`${input} mt-1 rtl:text-right`} />
+        </label>
+        <label className="text-xs font-semibold text-gray-600">
+          {t('Email')}
+          <input value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); setState(''); }} type="email" className={`${input} mt-1`} />
+        </label>
+        <button type="submit" disabled={state === 'saving'} className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-5 text-sm font-bold text-white disabled:opacity-60">
+          {state === 'saved' ? <><Check className="h-4 w-4" aria-hidden="true" /> {t('Enregistré')}</> : state === 'saving' ? t('Enregistrement...') : t('Enregistrer')}
+        </button>
+      </div>
+      {!form.phone && !form.email && state !== 'saving' && <p className="mt-2 text-xs font-semibold text-amber-700">{t('Ajoutez au moins un numéro : sans lui, les visiteurs ne peuvent vous joindre que par le formulaire.')}</p>}
+      {state && !['saving', 'saved'].includes(state) && <p className="mt-2 text-xs text-red-600">{state}</p>}
+    </form>
+  );
+}
+
+/** Every request sent on an investment project, with both parties' contacts: Meskan puts them in touch. */
+function InterestsPanel() {
+  const { t } = useT();
+  const [interests, setInterests] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.get('/admin/project-interests', { localize: false }).then(({ data }) => setInterests(data.interests)).catch((e) => setError(e.message));
+  }, []);
+
+  const toggle = async (i) => {
+    try {
+      await api.put(`/admin/project-interests/${i._id}/seen`, { seen: !i.seen });
+      setInterests((list) => list.map((x) => (x._id === i._id ? { ...x, seen: !i.seen } : x)));
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  if (error) return <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-red-600">{error}</p>;
+  if (!interests) return <p className="text-gray-500">{t('Chargement...')}</p>;
+  if (!interests.length) return <p className="rounded-2xl bg-white p-8 text-center text-gray-400 shadow-card">{t('Aucune demande pour le moment.')}</p>;
+
+  const tel = (n = '') => `tel:${String(n).replace(/[^\d+]/g, '')}`;
+  return (
+    <ul className="space-y-3">
+      {interests.map((i) => {
+        const p = i.project || {};
+        const capital = p.kind === 'capital';
+        const ownerPhone = p.contactPhone || p.owner?.phone;
+        const ownerEmail = p.contactEmail || p.owner?.email;
+        return (
+          <li key={i._id} className={`rounded-2xl bg-white p-4 shadow-card ${i.seen ? 'opacity-70' : 'ring-2 ring-[#00B3D2]/40'}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-gray-400">
+                {new Date(i.createdAt).toLocaleString(dateLocale())} · {p.reference || t('Projet supprimé')}
+              </p>
+              <button type="button" onClick={() => toggle(i)} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${i.seen ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                {i.seen ? <><Check className="h-3.5 w-3.5" aria-hidden="true" /> {t('Traitée')}</> : t('À traiter')}
+              </button>
+            </div>
+            {p._id && (
+              <Link href={`/investir/${p._id}`} target="_blank" className="mt-1 inline-flex items-center gap-1 font-bold text-ink hover:text-[#00B3D2]">
+                {p.title} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            )}
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {/* who sent the request */}
+              <div className="rounded-xl bg-slate-50 p-3">
+                <p className="text-[11px] font-bold uppercase text-gray-400">{capital ? t('Propriétaire qui propose un bien') : t('Investisseur intéressé')}</p>
+                <p className="font-bold text-ink">{i.name}</p>
+                <p className="mt-1 flex flex-wrap gap-3 text-sm">
+                  <a href={tel(i.phone)} dir="ltr" className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Phone className="h-4 w-4" aria-hidden="true" /> {i.phone}</a>
+                  {i.email && <a href={`mailto:${i.email}`} className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Mail className="h-4 w-4" aria-hidden="true" /> {i.email}</a>}
+                </p>
+                {i.amount ? <p className="mt-1 text-sm font-semibold text-emerald-700">{capital ? t('Prix demandé :') : t('Montant envisagé :')} {formatDZD(i.amount)}</p> : null}
+                <p className="mt-1 whitespace-pre-line text-sm text-gray-700" dir="auto">{i.message}</p>
+              </div>
+              {/* who published the listing */}
+              <div className="rounded-xl bg-cyan-50/60 p-3">
+                <p className="text-[11px] font-bold uppercase text-gray-400">{capital ? t('Investisseur (auteur de la recherche)') : t('Propriétaire (auteur du projet)')}</p>
+                <p className="font-bold text-ink">{p.owner?.fullName || '—'}</p>
+                <p className="mt-1 flex flex-wrap gap-3 text-sm">
+                  {ownerPhone && <a href={tel(ownerPhone)} dir="ltr" className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Phone className="h-4 w-4" aria-hidden="true" /> {ownerPhone}</a>}
+                  {ownerEmail && <a href={`mailto:${ownerEmail}`} className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Mail className="h-4 w-4" aria-hidden="true" /> {ownerEmail}</a>}
+                </p>
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

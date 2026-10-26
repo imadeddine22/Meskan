@@ -5,12 +5,12 @@ import InvestorInterest from '../models/InvestorInterest.js';
 import { wilayaRegex } from '../utils/searchRegex.js';
 
 // Fields of a project shown in the investor's lists (cards)
-const CARD = 'title translations sourceLang reference assetType projectType partnership wilaya city area budget images interestsCount status owner createdAt';
+const CARD = 'title translations sourceLang reference kind assetType projectType partnership wilaya city area budget budgetMin areaMax images interestsCount status owner createdAt';
 
 /** Approved projects that fit the investor's preferences (all approved projects when none are set). */
 const matchFilter = (user) => {
   const prefs = user.investorPrefs || {};
-  const filter = { status: 'approved', owner: { $ne: user._id } };
+  const filter = { status: 'approved', kind: { $ne: 'capital' }, owner: { $ne: user._id } };
   if (prefs.wilayas?.length) filter.wilaya = { $in: prefs.wilayas.map(wilayaRegex) };
   if (prefs.assetTypes?.length) filter.assetType = { $in: prefs.assetTypes };
   if (prefs.projectTypes?.length) filter.projectType = { $in: prefs.projectTypes };
@@ -23,7 +23,7 @@ const myRequests = (userId, limit) =>
   InvestorInterest.find({ investor: userId })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .populate({ path: 'project', select: CARD, populate: { path: 'owner', select: 'fullName avatar' } })
+    .populate({ path: 'project', select: CARD })
     .lean();
 
 // GET /investor/dashboard — counters, latest requests, saved projects and matching projects
@@ -35,8 +35,8 @@ export const getDashboard = async (req, res, next) => {
       myRequests(me._id, 5),
       InvestorInterest.countDocuments({ investor: me._id }),
       InvestorInterest.countDocuments({ investor: me._id, seen: true }),
-      InvestmentProject.find({ _id: { $in: me.savedProjects || [] }, status: 'approved' }).select(CARD).populate('owner', 'fullName avatar').lean(),
-      InvestmentProject.find(filter).sort({ createdAt: -1 }).limit(6).select(CARD).populate('owner', 'fullName avatar').lean(),
+      InvestmentProject.find({ _id: { $in: me.savedProjects || [] }, status: 'approved' }).select(CARD).lean(),
+      InvestmentProject.find(filter).sort({ createdAt: -1 }).limit(6).select(CARD).lean(),
       InvestmentProject.countDocuments(filter),
     ]);
     res.json({
@@ -68,7 +68,6 @@ export const getSaved = async (req, res, next) => {
     const me = await User.findById(req.user._id).select('savedProjects').lean();
     const projects = await InvestmentProject.find({ _id: { $in: me.savedProjects || [] }, status: 'approved' })
       .select(CARD)
-      .populate('owner', 'fullName avatar')
       .lean();
     res.json({ success: true, projects, ids: (me.savedProjects || []).map(String) });
   } catch (err) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Search, Landmark, Handshake, MessagesSquare, PlusCircle, RefreshCw } from 'lucide-react';
+import { Search, Landmark, Handshake, MessagesSquare, PlusCircle, RefreshCw, Coins } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from '@/components/LocaleLink';
@@ -28,6 +28,8 @@ export default function InvestPage() {
   const [form, setForm] = useState(EMPTY);
   const [filters, setFilters] = useState(EMPTY);
   const [sort, setSort] = useState('newest');
+  // 'asset': properties looking for an investor; 'capital': investors looking for a property
+  const [kind, setKind] = useState('asset');
   const [loading, setLoading] = useState(!initial);
   const silentFirst = useRef(Boolean(initial));
   const lastRequest = useRef(0);
@@ -38,7 +40,7 @@ export default function InvestPage() {
       if (!silentFirst.current) setLoading(true);
       silentFirst.current = false;
       try {
-        const params = { page, limit: 12, sort, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)) };
+        const params = { page, limit: 12, sort, kind, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)) };
         const { data } = await api.get('/projects', { params });
         if (id !== lastRequest.current) return;
         setProjects(data.projects || []);
@@ -50,7 +52,7 @@ export default function InvestPage() {
         if (id === lastRequest.current) setLoading(false);
       }
     })();
-  }, [page, filters, sort]);
+  }, [page, filters, sort, kind]);
 
   const apply = (e) => {
     e.preventDefault();
@@ -62,7 +64,8 @@ export default function InvestPage() {
     setFilters(EMPTY);
     setPage(1);
   };
-  const proposeHref = user ? '/investor/projects?new=1' : '/login?redirect=%2Finvestor%2Fprojects%3Fnew%3D1';
+  const newHref = (k) => (user ? `/investor/projects?new=${k}` : `/login?redirect=${encodeURIComponent(`/investor/projects?new=${k}`)}`);
+  const proposeHref = newHref('asset');
   const select = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#00B3D2]';
 
   return (
@@ -81,11 +84,11 @@ export default function InvestPage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href={proposeHref} className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-bold text-white shadow-lg transition hover:scale-105" style={{ background: projectGradient }}>
-              <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('Proposer mon projet')}
+              <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('J’ai un bien : proposer mon projet')}
             </Link>
-            <a href="#projets" className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 font-bold transition hover:bg-slate-100" style={{ color: PROJECT_COLORS.ink }}>
-              <Search className="h-5 w-5" aria-hidden="true" /> {t('Voir les projets')}
-            </a>
+            <Link href={newHref('capital')} className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 font-bold transition hover:bg-slate-100" style={{ color: PROJECT_COLORS.ink }}>
+              <Coins className="h-5 w-5" aria-hidden="true" /> {t('J’ai un capital : publier ma recherche')}
+            </Link>
           </div>
           {!user ? (
             <Link href="/register?role=investor" className="mt-5 inline-block text-sm font-semibold text-white/85 underline-offset-4 hover:underline">
@@ -119,6 +122,25 @@ export default function InvestPage() {
 
       {/* Filters + list */}
       <section id="projets" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-12 sm:px-6">
+        {/* Two lists: properties looking for an investor, investors looking for a property */}
+        <div role="tablist" aria-label={t('Type d’annonce')} className="mb-4 inline-flex flex-wrap gap-1 rounded-2xl bg-white p-1 shadow-card ring-1 ring-black/5">
+          {[
+            { k: 'asset', icon: Landmark, label: 'Projets cherchant un investisseur' },
+            { k: 'capital', icon: Coins, label: 'Investisseurs cherchant un projet' },
+          ].map(({ k, icon: Icon, label }) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={kind === k}
+              onClick={() => { setKind(k); setPage(1); }}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${kind === k ? 'text-white shadow' : 'text-slate-600 hover:bg-slate-50'}`}
+              style={kind === k ? { background: projectGradient } : undefined}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" /> {t(label)}
+            </button>
+          ))}
+        </div>
         <form onSubmit={apply} className="mb-6 grid gap-3 rounded-2xl bg-white p-4 shadow-card ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-6">
           <label className="relative lg:col-span-2">
             <span className="sr-only">{t('Rechercher')}</span>
@@ -132,7 +154,7 @@ export default function InvestPage() {
             ))}
           </select>
           <select value={form.assetType} onChange={(e) => setForm({ ...form, assetType: e.target.value })} className={select} aria-label={t('Type de bien')}>
-            <option value="">{t('Tous les biens')}</option>
+            <option value="">{kind === 'capital' ? t('Tous les biens recherchés') : t('Tous les biens')}</option>
             {ASSET_TYPES.map((x) => (
               <option key={x} value={x}>{t(x)}</option>
             ))}
@@ -171,9 +193,9 @@ export default function InvestPage() {
           <p className="py-16 text-center text-slate-400">{t('Chargement...')}</p>
         ) : projects.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white py-14 text-center">
-            <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Aucun projet ne correspond à votre recherche.')}</p>
-            <Link href={proposeHref} className="mt-4 inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white" style={{ background: projectGradient }}>
-              <PlusCircle className="h-4 w-4" aria-hidden="true" /> {t('Proposer mon projet')}
+            <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{kind === 'capital' ? t('Aucune recherche d’investisseur ne correspond.') : t('Aucun projet ne correspond à votre recherche.')}</p>
+            <Link href={newHref(kind)} className="mt-4 inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white" style={{ background: projectGradient }}>
+              <PlusCircle className="h-4 w-4" aria-hidden="true" /> {kind === 'capital' ? t('Publier ma recherche') : t('Proposer mon projet')}
             </Link>
           </div>
         ) : (

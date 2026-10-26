@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PlusCircle, Pencil, Trash2, Eye, Users, X, Clock, CheckCircle2, XCircle, Phone, Mail, ExternalLink, ImagePlus, FileText, Lock } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Eye, Users, X, Clock, CheckCircle2, XCircle, Phone, Mail, ExternalLink, ImagePlus, FileText, Lock, Landmark, Coins, ChevronRight } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import DashboardShell from '@/components/DashboardShell';
@@ -12,12 +12,12 @@ import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
 import { useCommunes } from '@/hooks/useCommunes';
-import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea, assetLabel } from '@/lib/projects';
+import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea, assetLabel, isCapital, budgetRange, areaRange, placeLabel } from '@/lib/projects';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
-const EMPTY = { assetType: 'Terrain', assetOther: '', title: '', description: '', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: '', city: '', address: '', area: '', landDocument: 'Acte notarié', documentOther: '', budget: '', ownerShare: '', contactPhone: '', contactEmail: '' };
+const EMPTY = { assetType: 'Terrain', assetOther: '', title: '', description: '', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: '', city: '', address: '', area: '', areaMax: '', landDocument: 'Acte notarié', documentOther: '', budget: '', budgetMin: '', ownerShare: '', contactPhone: '', contactEmail: '' };
 const NO_DOCUMENT = 'En cours de régularisation'; // papers not ready: no document photo asked
 const MAX_DOCUMENTS = 2;
 
@@ -47,7 +47,8 @@ function MyProjects({ inDashboard }) {
   const params = useSearchParams();
   const { user, loading: authLoading } = useAuthStore();
   const [projects, setProjects] = useState(null);
-  const [editing, setEditing] = useState(null); // null | 'new' | project
+  // null | 'choose' (pick the investor type) | 'asset' / 'capital' (new listing of that kind) | project (edit)
+  const [editing, setEditing] = useState(null);
   const [openInterests, setOpenInterests] = useState(null); // project id
   const [interests, setInterests] = useState([]);
   const [error, setError] = useState('');
@@ -62,7 +63,9 @@ function MyProjects({ inDashboard }) {
     if (authLoading) return;
     if (!user) return router.replace('/login?redirect=' + encodeURIComponent(pathname));
     load();
-    if (params.get('new')) setEditing('new');
+    // ?new=asset / ?new=capital opens that form directly; ?new=1 asks for the investor type first
+    const wanted = params.get('new');
+    if (wanted) setEditing(wanted === 'asset' || wanted === 'capital' ? wanted : 'choose');
   }, [user, authLoading]);
 
   const showInterests = async (p) => {
@@ -91,9 +94,9 @@ function MyProjects({ inDashboard }) {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black md:text-3xl" style={{ color: PROJECT_COLORS.ink }}>{t('Mes projets')}</h1>
-            <p className="text-sm text-slate-500">{t('Vos biens proposés aux investisseurs et les demandes reçues.')}</p>
+            <p className="text-sm text-slate-500">{t('Vos biens proposés aux investisseurs, vos recherches d’investissement et les demandes reçues.')}</p>
           </div>
-          <button type="button" onClick={() => setEditing('new')} className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold text-white shadow" style={{ background: projectGradient }}>
+          <button type="button" onClick={() => setEditing('choose')} className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold text-white shadow" style={{ background: projectGradient }}>
             <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('Proposer mon projet')}
           </button>
         </div>
@@ -104,26 +107,36 @@ function MyProjects({ inDashboard }) {
         ) : projects.length === 0 ? (
           <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white py-14 text-center">
             <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Vous n’avez pas encore proposé de projet.')}</p>
-            <p className="mt-1 text-sm text-slate-500">{t('Décrivez votre bien (terrain, local, bâtiment…) et le projet que vous imaginez : les investisseurs vous contacteront.')}</p>
+            <p className="mt-1 text-sm text-slate-500">{t('Décrivez votre bien (terrain, local, bâtiment…) et le projet que vous imaginez, ou ce que vous cherchez si vous avez un capital à investir.')}</p>
           </div>
         ) : (
           <ul className="space-y-4">
             {projects.map((p) => {
               const st = STATUS[p.status] || STATUS.pending;
+              const capital = isCapital(p);
               return (
                 <li key={p._id} className="overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-black/5">
                   <div className="flex flex-col gap-4 p-4 sm:flex-row">
-                    <img src={getImageUrl(p.images?.[0]?.url) || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=60'} alt="" className="h-32 w-full shrink-0 rounded-2xl object-cover sm:w-48" />
+                    {capital ? (
+                      <div className="grid h-32 w-full shrink-0 place-items-center rounded-2xl text-white sm:w-48" style={{ background: projectGradient }}>
+                        <Coins className="h-12 w-12" aria-hidden="true" />
+                      </div>
+                    ) : (
+                      <img src={getImageUrl(p.images?.[0]?.url) || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=60'} alt="" className="h-32 w-full shrink-0 rounded-2xl object-cover sm:w-48" />
+                    )}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${st.cls}`}>
                           <st.icon className="h-3.5 w-3.5" aria-hidden="true" /> {t(st.label)}
                         </span>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">{capital ? t('Je cherche un bien') : t('J’ai un bien')}</span>
                         <span className="text-xs text-slate-400">{p.reference}</span>
                       </div>
                       <p className="mt-1 truncate text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{p.title}</p>
                       <p className="text-sm text-slate-500">
-                        {t(p.city)}, {t(p.wilaya)} · {assetLabel(p, t)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {p.budget ? formatDZD(p.budget) : t('Budget à définir')}
+                        {capital
+                          ? `${placeLabel(p, t)} · ${assetLabel(p, t)} · ${areaRange(p, t, lang)} · ${budgetRange(p, t, formatDZD)}`
+                          : `${t(p.city)}, ${t(p.wilaya)} · ${assetLabel(p, t)} · ${formatArea(p.area, lang)} · ${t(p.projectType)} · ${p.budget ? formatDZD(p.budget) : t('Budget à définir')}`}
                       </p>
                       {p.status === 'rejected' && p.rejectionReason && (
                         <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -132,8 +145,7 @@ function MyProjects({ inDashboard }) {
                       )}
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button type="button" onClick={() => showInterests(p)} className="relative inline-flex items-center gap-1.5 rounded-lg bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-800 hover:bg-cyan-100">
-                          <Users className="h-4 w-4" aria-hidden="true" /> {t('Demandes d’investisseurs')} ({p.interestsCount || 0})
-                          {p.unreadInterests > 0 && <span className="absolute -end-1.5 -top-1.5 rounded-full bg-pink-500 px-1.5 text-[11px] font-bold text-white">{p.unreadInterests}</span>}
+                          <Users className="h-4 w-4" aria-hidden="true" /> {capital ? t('Propositions reçues') : t('Demandes d’investisseurs')} ({p.interestsCount || 0})
                         </button>
                         <button type="button" onClick={() => setEditing(p)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
                           <Pencil className="h-4 w-4" aria-hidden="true" /> {t('Modifier')}
@@ -153,22 +165,24 @@ function MyProjects({ inDashboard }) {
                       {interests.length === 0 ? (
                         <p className="text-sm text-slate-500">{t('Aucune demande pour le moment.')}</p>
                       ) : (
-                        <ul className="space-y-3">
-                          {interests.map((i) => (
-                            <li key={i._id} className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{i.name}</p>
-                                <span className="text-xs text-slate-400">{new Date(i.createdAt).toLocaleString(dateLocale())}</span>
-                              </div>
-                              {i.amount ? <p className="text-sm font-semibold text-emerald-700">{t('Montant envisagé :')} {formatDZD(i.amount)}</p> : null}
-                              <p className="mt-1 whitespace-pre-line text-sm text-slate-700" dir="auto">{i.message}</p>
-                              <div className="mt-2 flex flex-wrap gap-3 text-sm">
-                                <a href={`tel:${i.phone.replace(/[^\d+]/g, '')}`} dir="ltr" className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Phone className="h-4 w-4" aria-hidden="true" /> {i.phone}</a>
-                                {i.email && <a href={`mailto:${i.email}`} className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Mail className="h-4 w-4" aria-hidden="true" /> {i.email}</a>}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
+                        <>
+                          {/* Meskan is the intermediary: the publisher sees the request, not who sent it */}
+                          <p className="mb-3 flex items-start gap-1.5 text-xs text-slate-500">
+                            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {t('Les coordonnées restent chez Meskan : notre équipe vous contacte pour vous mettre en relation.')}
+                          </p>
+                          <ul className="space-y-3">
+                            {interests.map((i) => (
+                              <li key={i._id} className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{i.name || (capital ? t('Proposition d’un propriétaire') : t('Demande d’un investisseur'))}</p>
+                                  <span className="text-xs text-slate-400">{new Date(i.createdAt).toLocaleString(dateLocale())}</span>
+                                </div>
+                                {i.amount ? <p className="text-sm font-semibold text-emerald-700">{capital ? t('Prix demandé :') : t('Montant envisagé :')} {formatDZD(i.amount)}</p> : null}
+                                <p className="mt-1 whitespace-pre-line text-sm text-slate-700" dir="auto">{i.message}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
                       )}
                     </div>
                   )}
@@ -179,9 +193,11 @@ function MyProjects({ inDashboard }) {
         )}
       </section>
 
-      {editing && (
+      {editing === 'choose' && <KindChooser onPick={setEditing} onClose={() => setEditing(null)} />}
+      {editing && editing !== 'choose' && (
         <ProjectForm
-          project={editing === 'new' ? null : editing}
+          project={typeof editing === 'string' ? null : editing}
+          kind={typeof editing === 'string' ? editing : editing.kind === 'capital' ? 'capital' : 'asset'}
           user={user}
           onClose={() => setEditing(null)}
           onSaved={() => {
@@ -209,8 +225,50 @@ function DashboardFrame({ children }) {
   return <DashboardShell role="investor" title={t('Mes projets')}>{children}</DashboardShell>;
 }
 
-/** Create / edit a project: land or property, project idea, partnership, photos. Saving sends it to moderation. */
-function ProjectForm({ project, user, onClose, onSaved }) {
+/** First step of a new listing: which kind of investor are you? (property owner or capital holder) */
+function KindChooser({ onPick, onClose }) {
+  const { t } = useT();
+  const choices = [
+    { kind: 'asset', icon: Landmark, title: 'J’ai un bien', text: 'Terrain, local, bâtiment… que je ne veux pas vendre : je cherche un investisseur ou un associé pour un projet.' },
+    { kind: 'capital', icon: Coins, title: 'J’ai un capital à investir', text: 'Je cherche un terrain ou un bien pour un projet : je précise la wilaya, la surface et le budget, et les propriétaires me contactent.' },
+  ];
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="kind-title" className="w-full max-w-xl rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-6">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 id="kind-title" className="text-xl font-black" style={{ color: PROJECT_COLORS.ink }}>{t('Quel investisseur êtes-vous ?')}</h2>
+            <p className="text-xs text-slate-500">{t('Choisissez ce que vous apportez au projet.')}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label={t('Fermer')} className="grid h-9 w-9 place-items-center rounded-full hover:bg-slate-100">
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+        <div className="grid gap-3">
+          {choices.map(({ kind, icon: Icon, title, text }) => (
+            <button key={kind} type="button" onClick={() => onPick(kind)} className="group flex items-center gap-4 rounded-2xl border-2 border-slate-100 p-4 text-start transition hover:border-[#00B3D2] hover:bg-[#F5FBFC]">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-white" style={{ background: projectGradient }}>
+                <Icon className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold" style={{ color: PROJECT_COLORS.ink }}>{t(title)}</span>
+                <span className="mt-0.5 block text-sm text-slate-500">{t(text)}</span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 group-hover:text-[#00B3D2] rtl:rotate-180" aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Create / edit a listing. kind 'asset': land or property, project idea, partnership, papers, photos.
+ * kind 'capital': what the investor looks for (type of property, wilaya, area and price range). Saving sends it to moderation.
+ */
+function ProjectForm({ project, kind = 'asset', user, onClose, onSaved }) {
+  const capital = kind === 'capital';
   const { t, lang } = useT();
   const { wilayas } = useWilayas();
   const [form, setForm] = useState(() =>
@@ -233,15 +291,25 @@ function ProjectForm({ project, user, onClose, onSaved }) {
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    // amounts and areas may be typed with spaces ("5 000 000"): keep the digits only
+    const digits = (v) => String(v ?? '').replace(/\D/g, '');
+    const nums = { area: digits(form.area), areaMax: digits(form.areaMax), budget: digits(form.budget), budgetMin: digits(form.budgetMin) };
     if (form.title.trim().length < 5) return setError(t('Donnez un titre d’au moins 5 caractères.'));
-    if (!form.wilaya || !form.city.trim()) return setError(t('Indiquez la wilaya et la commune du bien.'));
-    if (!(Number(form.area) > 0)) return setError(t('Indiquez la surface du bien.'));
-    if (!project && files.length === 0) return setError(t('Ajoutez au moins une photo du bien.'));
     if (form.assetType === 'Autre bien' && form.assetOther.trim().length < 2) return setError(t('Précisez de quel bien il s’agit.'));
-    if (form.landDocument === 'Autre' && form.documentOther.trim().length < 2) return setError(t('Précisez le type de document.'));
-    if (form.landDocument !== NO_DOCUMENT && docCount === 0) return setError(t('Ajoutez une ou deux photos du document de propriété.'));
+    if (capital) {
+      if (!form.wilaya) return setError(t('Choisissez la wilaya où vous cherchez.'));
+      if (nums.area && nums.areaMax && Number(nums.area) > Number(nums.areaMax)) return setError(t('La surface minimale dépasse la surface maximale.'));
+      if (nums.budgetMin && nums.budget && Number(nums.budgetMin) > Number(nums.budget)) return setError(t('Le budget minimum dépasse le budget maximum.'));
+    } else {
+      if (!form.wilaya || !form.city.trim()) return setError(t('Indiquez la wilaya et la commune du bien.'));
+      if (!(Number(nums.area) > 0)) return setError(t('Indiquez la surface du bien.'));
+      if (!project && files.length === 0) return setError(t('Ajoutez au moins une photo du bien.'));
+      if (form.landDocument === 'Autre' && form.documentOther.trim().length < 2) return setError(t('Précisez le type de document.'));
+      if (form.landDocument !== NO_DOCUMENT && docCount === 0) return setError(t('Ajoutez une ou deux photos du document de propriété.'));
+    }
     const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => fd.append(k, String(v ?? '').trim()));
+    Object.entries({ ...form, ...nums }).forEach(([k, v]) => fd.append(k, String(v ?? '').trim()));
+    if (!project) fd.append('kind', kind);
     if (project) {
       fd.append('keepImages', JSON.stringify(keep.map((i) => i.publicId)));
       fd.append('keepDocuments', JSON.stringify(docKeep.map((i) => i.publicId)));
@@ -275,7 +343,7 @@ function ProjectForm({ project, user, onClose, onSaved }) {
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 id="project-form-title" className="text-xl font-black" style={{ color: PROJECT_COLORS.ink }}>{project ? t('Modifier le projet') : t('Proposer mon projet')}</h2>
+            <h2 id="project-form-title" className="text-xl font-black" style={{ color: PROJECT_COLORS.ink }}>{capital ? (project ? t('Modifier ma recherche') : t('Publier ma recherche d’investissement')) : project ? t('Modifier le projet') : t('Proposer mon projet')}</h2>
             <p className="text-xs text-slate-500">{t('Publié après validation par l’administration.')}</p>
           </div>
           <button type="button" onClick={onClose} aria-label={t('Fermer')} className="grid h-9 w-9 place-items-center rounded-full hover:bg-slate-100">
@@ -285,7 +353,7 @@ function ProjectForm({ project, user, onClose, onSaved }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <fieldset className="sm:col-span-2">
-            <legend className={label}>{t('Ce que vous proposez')} *</legend>
+            <legend className={label}>{capital ? t('Ce que vous cherchez') : t('Ce que vous proposez')} *</legend>
             <div className="mt-1.5 flex flex-wrap gap-2">
               {ASSET_TYPES.map((x) => (
                 <button
@@ -309,7 +377,7 @@ function ProjectForm({ project, user, onClose, onSaved }) {
           </fieldset>
           <label className={`${label} sm:col-span-2`}>
             {t('Titre')} *
-            <input value={form.title} onChange={set('title')} maxLength={120} placeholder={t('Ex : Local de 200 m² cherche associé pour un restaurant')} className={`${input} mt-1`} />
+            <input value={form.title} onChange={set('title')} maxLength={120} placeholder={capital ? t('Ex : Je cherche un terrain de 1 000 m² à Oran pour une résidence') : t('Ex : Local de 200 m² cherche associé pour un restaurant')} className={`${input} mt-1`} />
           </label>
           <label className={label}>
             {t('Type de projet')}
@@ -324,8 +392,8 @@ function ProjectForm({ project, user, onClose, onSaved }) {
             </select>
           </label>
           <label className={`${label} sm:col-span-2`}>
-            {t('Le projet que vous imaginez')}
-            <textarea value={form.description} onChange={set('description')} rows={4} maxLength={5000} placeholder={t('Ce que vous voulez construire, ce que vous apportez, ce que vous attendez de l’investisseur…')} className={`${input} mt-1 resize-y`} />
+            {capital ? t('Votre recherche en détail') : t('Le projet que vous imaginez')}
+            <textarea value={form.description} onChange={set('description')} rows={4} maxLength={5000} placeholder={capital ? t('Le projet que vous voulez réaliser, l’emplacement idéal, vos conditions…') : t('Ce que vous voulez construire, ce que vous apportez, ce que vous attendez de l’investisseur…')} className={`${input} mt-1 resize-y`} />
           </label>
           <label className={label}>
             {t('Wilaya')} *
@@ -335,10 +403,10 @@ function ProjectForm({ project, user, onClose, onSaved }) {
             </select>
           </label>
           <label className={label}>
-            {t('Commune')} *
+            {t('Commune')} {capital ? '' : '*'}
             {communes.length ? (
               <select value={form.city} onChange={set('city')} className={`${input} mt-1`}>
-                <option value="">{t('Choisir…')}</option>
+                <option value="">{capital ? t('Toutes les communes') : t('Choisir…')}</option>
                 {/* a commune saved before the list existed stays selectable */}
                 {form.city && !communes.some((c) => c.name === form.city) && <option value={form.city}>{form.city}</option>}
                 {communes.map((c) => (
@@ -349,22 +417,46 @@ function ProjectForm({ project, user, onClose, onSaved }) {
               <input value={form.city} onChange={set('city')} disabled={!form.wilaya} placeholder={form.wilaya ? '' : t('Choisissez d’abord la wilaya')} className={`${input} mt-1 disabled:bg-slate-50`} />
             )}
           </label>
-          <label className={`${label} sm:col-span-2`}>
-            {t('Adresse ou lieu-dit')}
-            <input value={form.address} onChange={set('address')} className={`${input} mt-1`} />
-          </label>
-          <label className={label}>
-            {t('Surface (m²)')} *
-            <input value={form.area} onChange={set('area')} inputMode="numeric" dir="ltr" className={`${input} mt-1 rtl:text-right`} />
-          </label>
-          <label className={label}>
-            {t('Investissement estimé (DZD)')}
-            <input value={form.budget} onChange={set('budget')} inputMode="numeric" dir="ltr" placeholder={t('Laisser vide si à définir')} className={`${input} mt-1 rtl:text-right`} />
-          </label>
-          <label className={label}>
-            {t('Part que vous gardez (%)')}
-            <input value={form.ownerShare} onChange={set('ownerShare')} inputMode="numeric" dir="ltr" placeholder="40" className={`${input} mt-1 rtl:text-right`} />
-          </label>
+          {capital ? (
+            <>
+              {/* What the investor looks for: area and price ranges (each end optional) */}
+              <label className={label}>
+                {t('Surface minimale (m²)')}
+                <input value={form.area} onChange={set('area')} inputMode="numeric" dir="ltr" placeholder="500" className={`${input} mt-1 rtl:text-right`} />
+              </label>
+              <label className={label}>
+                {t('Surface maximale (m²)')}
+                <input value={form.areaMax} onChange={set('areaMax')} inputMode="numeric" dir="ltr" placeholder="2000" className={`${input} mt-1 rtl:text-right`} />
+              </label>
+              <label className={label}>
+                {t('Budget minimum (DZD)')}
+                <input value={form.budgetMin} onChange={set('budgetMin')} inputMode="numeric" dir="ltr" placeholder="5 000 000" className={`${input} mt-1 rtl:text-right`} />
+              </label>
+              <label className={label}>
+                {t('Budget maximum (DZD)')}
+                <input value={form.budget} onChange={set('budget')} inputMode="numeric" dir="ltr" placeholder="20 000 000" className={`${input} mt-1 rtl:text-right`} />
+              </label>
+            </>
+          ) : (
+            <>
+              <label className={`${label} sm:col-span-2`}>
+                {t('Adresse ou lieu-dit')}
+                <input value={form.address} onChange={set('address')} className={`${input} mt-1`} />
+              </label>
+              <label className={label}>
+                {t('Surface (m²)')} *
+                <input value={form.area} onChange={set('area')} inputMode="numeric" dir="ltr" className={`${input} mt-1 rtl:text-right`} />
+              </label>
+              <label className={label}>
+                {t('Investissement estimé (DZD)')}
+                <input value={form.budget} onChange={set('budget')} inputMode="numeric" dir="ltr" placeholder={t('Laisser vide si à définir')} className={`${input} mt-1 rtl:text-right`} />
+              </label>
+              <label className={label}>
+                {t('Part que vous gardez (%)')}
+                <input value={form.ownerShare} onChange={set('ownerShare')} inputMode="numeric" dir="ltr" placeholder="40" className={`${input} mt-1 rtl:text-right`} />
+              </label>
+            </>
+          )}
           <label className={label}>
             {t('Téléphone de contact')}
             <input value={form.contactPhone} onChange={set('contactPhone')} type="tel" dir="ltr" className={`${input} mt-1 rtl:text-right`} />
@@ -373,7 +465,12 @@ function ProjectForm({ project, user, onClose, onSaved }) {
             {t('Email de contact')}
             <input value={form.contactEmail} onChange={set('contactEmail')} type="email" className={`${input} mt-1`} />
           </label>
+          <p className="-mt-2 flex items-start gap-1.5 text-xs text-slate-500 sm:col-span-2">
+            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {t('Vos coordonnées restent privées : seule l’administration de Meskan les voit. Les visiteurs contactent Meskan, qui vous met en relation.')}
+          </p>
 
+          {/* An investor's search has no property yet: no document, no photos */}
+          {!capital && (<>
           {/* Ownership document: its type, then 1–2 photos for the admin's check (never shown to visitors) */}
           <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 sm:col-span-2">
             <p className="flex items-center gap-1.5 text-sm font-bold" style={{ color: PROJECT_COLORS.ink }}>
@@ -454,6 +551,7 @@ function ProjectForm({ project, user, onClose, onSaved }) {
               </label>
             </div>
           </div>
+          </>)}
         </div>
 
         {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
