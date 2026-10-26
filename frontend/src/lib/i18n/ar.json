@@ -1695,8 +1695,6 @@
   "J’ai un bien : proposer mon projet": "عندي عقار: أعرض مشروعي",
   "J’ai un capital : publier ma recherche": "عندي رأس مال: أنشر بحثي",
   "Type d’annonce": "نوع الإعلان",
-  "Biens cherchant un investisseur": "عقارات تبحث عن مستثمر",
-  "Investisseurs cherchant un bien": "مستثمرون يبحثون عن عقار",
   "Aucune recherche d’investisseur ne correspond.": "لا يوجد طلب مستثمر مطابق.",
   "Publier ma recherche": "انشر بحثي",
   "Tous les biens recherchés": "كل العقارات المطلوبة",
@@ -1742,5 +1740,7 @@
   "Propriétaire qui propose un bien": "مالك يعرض عقارًا",
   "Investisseur intéressé": "مستثمر مهتم",
   "Investisseur (auteur de la recherche)": "المستثمر (صاحب الطلب)",
-  "Propriétaire (auteur du projet)": "المالك (صاحب المشروع)"
+  "Propriétaire (auteur du projet)": "المالك (صاحب المشروع)",
+  "Projets cherchant un investisseur": "مشاريع تبحث عن مستثمر",
+  "Investisseurs cherchant un projet": "مستثمرون يبحثون عن مشروع"
 }

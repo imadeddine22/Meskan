@@ -1690,8 +1690,6 @@
   "J’ai un bien : proposer mon projet": "I have a property: propose my project",
   "J’ai un capital : publier ma recherche": "I have capital: publish my search",
   "Type d’annonce": "Listing type",
-  "Biens cherchant un investisseur": "Properties looking for an investor",
-  "Investisseurs cherchant un bien": "Investors looking for a property",
   "Aucune recherche d’investisseur ne correspond.": "No investor search matches.",
   "Publier ma recherche": "Publish my search",
   "Tous les biens recherchés": "All wanted properties",
@@ -1737,5 +1735,7 @@
   "Propriétaire qui propose un bien": "Owner offering a property",
   "Investisseur intéressé": "Interested investor",
   "Investisseur (auteur de la recherche)": "Investor (author of the search)",
-  "Propriétaire (auteur du projet)": "Owner (author of the project)"
+  "Propriétaire (auteur du projet)": "Owner (author of the project)",
+  "Projets cherchant un investisseur": "Projects looking for an investor",
+  "Investisseurs cherchant un projet": "Investors looking for a project"
 }

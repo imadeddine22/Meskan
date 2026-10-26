@@ -125,8 +125,8 @@ export default function InvestPage() {
         {/* Two lists: properties looking for an investor, investors looking for a property */}
         <div role="tablist" aria-label={t('Type d’annonce')} className="mb-4 inline-flex flex-wrap gap-1 rounded-2xl bg-white p-1 shadow-card ring-1 ring-black/5">
           {[
-            { k: 'asset', icon: Landmark, label: 'Biens cherchant un investisseur' },
-            { k: 'capital', icon: Coins, label: 'Investisseurs cherchant un bien' },
+            { k: 'asset', icon: Landmark, label: 'Projets cherchant un investisseur' },
+            { k: 'capital', icon: Coins, label: 'Investisseurs cherchant un projet' },
           ].map(({ k, icon: Icon, label }) => (
             <button
               key={k}
