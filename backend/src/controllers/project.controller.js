@@ -11,7 +11,7 @@ import { escapeHtml } from '../utils/escapeHtml.js';
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 // Fields the property owner may set. Status, views, reference and counters are server-controlled.
-const EDITABLE = ['title', 'description', 'assetType', 'assetOther', 'projectType', 'partnership', 'country', 'wilaya', 'city', 'address', 'area', 'landDocument', 'documentOther', 'budget', 'ownerShare', 'contactPhone', 'contactEmail'];
+const EDITABLE = ['title', 'description', 'assetType', 'assetOther', 'projectType', 'partnership', 'country', 'wilaya', 'city', 'address', 'area', 'areaMax', 'landDocument', 'documentOther', 'budget', 'budgetMin', 'ownerShare', 'contactPhone', 'contactEmail'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined && body[k] !== '').map((k) => [k, body[k]]));
 const isOwner = (req, p) => String(p.owner?._id || p.owner) === String(req.user?._id);
 const MAX_DOCUMENTS = 2;
@@ -29,10 +29,11 @@ const keptIds = (raw) => {
 };
 const notify = (to, subject, html) => to && sendEmail({ to, subject, html }).catch((e) => console.error('Email failed:', e.message));
 
-// GET /projects?wilaya=&assetType=&projectType=&partnership=&minArea=&maxArea=&q=&sort=newest|area|budget&page=
+// GET /projects?kind=asset|capital&wilaya=&assetType=&projectType=&partnership=&minArea=&maxArea=&q=&sort=newest|area|budget&page=
 export const getProjects = async (req, res, next) => {
   try {
-    const filter = { status: 'approved' };
+    // kind=capital: investors' searches; anything else: properties (older listings have no kind)
+    const filter = { status: 'approved', kind: req.query.kind === 'capital' ? 'capital' : { $ne: 'capital' } };
     const { wilaya, assetType, projectType, partnership, q, sort } = req.query;
     if (typeof wilaya === 'string' && wilaya) filter.wilaya = wilayaRegex(wilaya);
     if (ASSET_TYPES.includes(assetType)) filter.assetType = assetType;
@@ -94,9 +95,11 @@ export const getMyProjects = async (req, res, next) => {
 // POST /projects (multipart: fields + images[] + documents[])
 export const createProject = async (req, res, next) => {
   try {
-    const docs = documentsOf(req);
+    const kind = req.body.kind === 'capital' ? 'capital' : 'asset';
+    // an investor's search has no property yet: no ownership document
+    const docs = kind === 'capital' ? [] : documentsOf(req);
     // a photo of the ownership document is needed for the admin's check (unless the papers are being regularised)
-    if (req.user.role !== 'admin' && !docs.length && (req.body.landDocument || 'Acte notarié') !== NO_DOCUMENT) {
+    if (kind === 'asset' && req.user.role !== 'admin' && !docs.length && (req.body.landDocument || 'Acte notarié') !== NO_DOCUMENT) {
       return res.status(400).json({ success: false, message: 'Add a photo of the property documents' });
     }
     const [images, documentImages] = await Promise.all([
@@ -107,6 +110,7 @@ export const createProject = async (req, res, next) => {
     const project = await InvestmentProject.create({
       ...pick(req.body, EDITABLE),
       ...(coordinates && { coordinates }),
+      kind,
       images,
       documentImages,
       owner: req.user._id,
@@ -133,17 +137,26 @@ export const updateProject = async (req, res, next) => {
     // form sent its list (unless the papers are being regularised)
     const keepDocs = keptIds(req.body.keepDocuments);
     const keptDocs = keepDocs ? project.documentImages.filter((i) => keepDocs.includes(i.publicId)) : project.documentImages;
-    const newDocs = documentsOf(req);
+    const capital = project.kind === 'capital';
+    const newDocs = capital ? [] : documentsOf(req);
     if (keptDocs.length + newDocs.length > MAX_DOCUMENTS) {
       return res.status(400).json({ success: false, message: 'At most 2 photos of the documents' });
     }
-    if (!admin && keepDocs && !keptDocs.length && !newDocs.length && (req.body.landDocument || project.landDocument) !== NO_DOCUMENT) {
+    if (!capital && !admin && keepDocs && !keptDocs.length && !newDocs.length && (req.body.landDocument || project.landDocument) !== NO_DOCUMENT) {
       return res.status(400).json({ success: false, message: 'Add a photo of the property documents' });
+    }
+    // a property keeps its commune and area (required); an investor's search may empty them
+    if (!capital && (req.body.city === '' || req.body.area === '')) {
+      return res.status(400).json({ success: false, message: 'City and area are required' });
     }
 
     Object.assign(project, pick(req.body, EDITABLE));
     if (req.body.ownerShare === '') project.ownerShare = undefined;
     if (req.body.budget === '') project.budget = 0; // emptied in the form: 'to be defined'
+    if (req.body.budgetMin === '') project.budgetMin = undefined;
+    if (req.body.areaMax === '') project.areaMax = undefined;
+    if (capital && req.body.area === '') project.area = undefined;
+    if (capital && req.body.city === '') project.city = '';
     const coordinates = parseCoordinates(req.body);
     if (coordinates) project.coordinates = coordinates;
     // photos removed in the form (list of public ids to keep), then new uploads appended
@@ -216,7 +229,7 @@ export const expressInterest = async (req, res, next) => {
 
     notify(
       project.owner.email,
-      `💼 Un investisseur s'intéresse à votre projet — ${project.title}`,
+      project.kind === 'capital' ? `💼 Un propriétaire répond à votre recherche — ${project.title}` : `💼 Un investisseur s'intéresse à votre projet — ${project.title}`,
       `<p>Bonjour ${escapeHtml(project.owner.fullName)},</p>
        <p><strong>${escapeHtml(name)}</strong> s'intéresse à votre projet <strong>${escapeHtml(project.title)}</strong> (${escapeHtml(project.reference)}).</p>
        <p>Téléphone : ${escapeHtml(phone)}${email ? ` · Email : ${escapeHtml(email)}` : ''}${amount ? ` · Montant envisagé : ${Number(amount).toLocaleString('fr-DZ')} DZD` : ''}</p>
@@ -267,7 +280,7 @@ export const approveProject = async (req, res, next) => {
     notify(
       project.owner?.email,
       `✅ Votre projet est publié — ${project.title}`,
-      `<p>Bonjour ${escapeHtml(project.owner?.fullName || '')},</p><p>Votre projet <strong>${escapeHtml(project.title)}</strong> est en ligne : les investisseurs peuvent vous contacter.</p><p><a href="${CLIENT_URL}/investir/${project._id}">Voir le projet</a></p>`
+      `<p>Bonjour ${escapeHtml(project.owner?.fullName || '')},</p><p>Votre projet <strong>${escapeHtml(project.title)}</strong> est en ligne : ${project.kind === 'capital' ? 'les propriétaires de biens' : 'les investisseurs'} peuvent vous contacter.</p><p><a href="${CLIENT_URL}/investir/${project._id}">Voir le projet</a></p>`
     );
     res.json({ success: true, project });
   } catch (err) {

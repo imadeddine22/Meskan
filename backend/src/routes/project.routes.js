@@ -15,7 +15,7 @@ import { upload } from '../middlewares/upload.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { interestLimiter } from '../middlewares/rateLimits.middleware.js';
 import { phoneRule } from '../validations/common.validation.js';
-import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS } from '../models/InvestmentProject.js';
+import { KINDS, ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS } from '../models/InvestmentProject.js';
 
 // Photos of the property (images[]) + photos of the ownership document (documents[], max 2)
 const projectFiles = upload.fields([{ name: 'images', maxCount: 10 }, { name: 'documents', maxCount: 2 }]);
@@ -33,9 +33,12 @@ const fields = {
   partnership: Joi.string().valid(...PARTNERSHIP_TYPES),
   country: Joi.string().trim().max(2),
   wilaya: Joi.string().trim().max(60),
-  city: Joi.string().trim().max(80),
+  city: Joi.string().trim().allow('').max(80),
   address: Joi.string().trim().allow('').max(200),
-  area: Joi.number().min(1).max(100000000),
+  area: Joi.number().min(1).max(100000000).allow(''),
+  areaMax: Joi.number().min(1).max(100000000).allow(''),
+  budgetMin: Joi.number().min(0).max(1e13).allow(''),
+  kind: Joi.string().valid(...KINDS), // set when the listing is created, ignored afterwards
   landDocument: Joi.string().valid(...LAND_DOCUMENTS),
   documentOther: Joi.string().trim().allow('').max(80).when('landDocument', { is: 'Autre', then: Joi.string().trim().min(2).max(80).required() }),
   budget: Joi.number().min(0).max(1e13).allow(''),
@@ -47,7 +50,9 @@ const fields = {
   keepImages: Joi.string().max(5000), // JSON list of the photos kept when editing
   keepDocuments: Joi.string().max(2000), // same for the document photos
 };
-const createSchema = Joi.object({ ...fields, title: fields.title.required(), wilaya: fields.wilaya.required(), city: fields.city.required(), area: fields.area.required() });
+// A property needs its commune and area; an investor's search ('capital') only needs the wilaya
+const forAsset = (rule) => Joi.when('kind', { is: 'capital', then: rule, otherwise: rule.invalid('').required() });
+const createSchema = Joi.object({ ...fields, title: fields.title.required(), wilaya: fields.wilaya.required(), city: forAsset(fields.city), area: forAsset(fields.area) });
 const updateSchema = Joi.object(fields);
 const interestSchema = Joi.object({
   name: Joi.string().trim().min(2).max(80).required(),

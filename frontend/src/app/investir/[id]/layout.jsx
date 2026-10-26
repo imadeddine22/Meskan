@@ -18,11 +18,15 @@ export async function generateMetadata({ params }) {
     return { title: 'Projet d’investissement', alternates: { canonical: `/investir/${params.id}` }, robots: data?.notFound ? { index: false, follow: true } : undefined };
   }
   const { t } = getT();
+  const capital = p.kind === 'capital';
   const meta = pageMeta({
     path: `/investir/${p._id}`,
-    title: t('{title} — {asset} à {city} cherche investisseur', { title: p.title, asset: assetLabel(p, t).toLowerCase(), city: t(p.city) }),
+    title: capital
+      ? t('{title} — investisseur cherche {asset} à {place}', { title: p.title, asset: assetLabel(p, t).toLowerCase(), place: t(p.city || p.wilaya) })
+      : t('{title} — {asset} à {city} cherche investisseur', { title: p.title, asset: assetLabel(p, t).toLowerCase(), city: t(p.city) }),
     description:
       truncate(p.description, 155) ||
+      (capital && t('Un investisseur cherche {asset} dans la wilaya de {wilaya} pour un projet {type}. Propriétaires : proposez votre bien.', { asset: assetLabel(p, t).toLowerCase(), wilaya: t(p.wilaya), type: t(p.projectType) })) ||
       t('{asset} de {area} m² à {city} ({wilaya}) pour un projet {type}. Partenariat : {partnership}.', { asset: assetLabel(p, t), area: p.area, city: t(p.city), wilaya: t(p.wilaya), type: t(p.projectType), partnership: t(p.partnership) }),
     robots: p.status === 'approved' ? undefined : { index: false, follow: false },
   });

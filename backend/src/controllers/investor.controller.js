@@ -5,12 +5,12 @@ import InvestorInterest from '../models/InvestorInterest.js';
 import { wilayaRegex } from '../utils/searchRegex.js';
 
 // Fields of a project shown in the investor's lists (cards)
-const CARD = 'title translations sourceLang reference assetType projectType partnership wilaya city area budget images interestsCount status owner createdAt';
+const CARD = 'title translations sourceLang reference kind assetType projectType partnership wilaya city area budget budgetMin areaMax images interestsCount status owner createdAt';
 
 /** Approved projects that fit the investor's preferences (all approved projects when none are set). */
 const matchFilter = (user) => {
   const prefs = user.investorPrefs || {};
-  const filter = { status: 'approved', owner: { $ne: user._id } };
+  const filter = { status: 'approved', kind: { $ne: 'capital' }, owner: { $ne: user._id } };
   if (prefs.wilayas?.length) filter.wilaya = { $in: prefs.wilayas.map(wilayaRegex) };
   if (prefs.assetTypes?.length) filter.assetType = { $in: prefs.assetTypes };
   if (prefs.projectTypes?.length) filter.projectType = { $in: prefs.projectTypes };

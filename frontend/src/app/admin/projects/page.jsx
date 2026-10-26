@@ -5,7 +5,7 @@ import { CheckCircle, Trash2, ExternalLink, Landmark, XCircle } from 'lucide-rea
 import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { formatArea, assetLabel, documentLabel } from '@/lib/projects';
+import { formatArea, assetLabel, documentLabel, isCapital, budgetRange, areaRange, placeLabel } from '@/lib/projects';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
@@ -104,15 +104,27 @@ export default function AdminProjectsPage() {
             <article key={p._id} className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card">
               {p.images?.[0] && <img src={getImageUrl(p.images[0].url)} alt="" className="aspect-[16/8] w-full object-cover" />}
               <div className="flex flex-1 flex-col p-4">
-                <p className="text-xs text-gray-400">{p.reference} · {new Date(p.updatedAt).toLocaleString(dateLocale())}</p>
-                <p className="font-bold text-ink">{p.title}</p>
-                <p className="text-sm text-gray-500">
-                  {t(p.city)}, {t(p.wilaya)} · {assetLabel(p, t)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {documentLabel(p, t)}
+                <p className="text-xs text-gray-400">
+                  <span className="me-1 rounded-full bg-cyan-50 px-2 py-0.5 font-bold text-cyan-800">{isCapital(p) ? t('Investisseur cherche un bien') : t('Bien cherchant un investisseur')}</span>
+                  {p.reference} · {new Date(p.updatedAt).toLocaleString(dateLocale())}
                 </p>
-                <p className="text-sm font-semibold text-gray-700">{p.budget ? formatDZD(p.budget) : t('Budget à définir')}{p.ownerShare != null ? ` · ${t('Part du propriétaire')} ${p.ownerShare} %` : ''}</p>
+                <p className="font-bold text-ink">{p.title}</p>
+                {isCapital(p) ? (
+                  <>
+                    <p className="text-sm text-gray-500">{placeLabel(p, t)} · {assetLabel(p, t)} · {areaRange(p, t, lang)} · {t(p.projectType)} · {t(p.partnership)}</p>
+                    <p className="text-sm font-semibold text-gray-700">{t('Budget')} : {budgetRange(p, t, formatDZD)}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-500">
+                      {t(p.city)}, {t(p.wilaya)} · {assetLabel(p, t)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {documentLabel(p, t)}
+                    </p>
+                    <p className="text-sm font-semibold text-gray-700">{p.budget ? formatDZD(p.budget) : t('Budget à définir')}{p.ownerShare != null ? ` · ${t('Part du propriétaire')} ${p.ownerShare} %` : ''}</p>
+                  </>
+                )}
                 {p.description && <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-gray-600">{p.description}</p>}
-                {/* Ownership document photos: private, for checking the property before publishing */}
-                <div className="mt-3 rounded-xl bg-slate-50 p-3">
+                {/* Ownership document photos: private, for checking the property before publishing (none for an investor's search) */}
+                {!isCapital(p) && <div className="mt-3 rounded-xl bg-slate-50 p-3">
                   <p className="text-xs font-bold text-gray-600">{t('Document de propriété')} : {documentLabel(p, t)}</p>
                   {p.documentImages?.length ? (
                     <div className="mt-2 flex gap-2">
@@ -125,7 +137,7 @@ export default function AdminProjectsPage() {
                   ) : (
                     <p className="mt-1 text-xs text-amber-700">{t('Aucune photo du document.')}</p>
                   )}
-                </div>
+                </div>}
                 <p className="mt-2 text-xs text-gray-500">{p.owner?.fullName} · {p.owner?.email}{p.owner?.phone ? ` · ${p.owner.phone}` : ''}</p>
                 {p.status === 'rejected' && p.rejectionReason && (
                   <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><strong>{t('Motif du refus :')}</strong> {p.rejectionReason}</p>

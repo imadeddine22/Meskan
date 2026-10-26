@@ -13,6 +13,32 @@ export const documentLabel = (p, t) => (p.landDocument === 'Autre' && p.document
 export const PROJECT_COLORS = { ink: '#152A41', from: '#0DD5C4', to: '#00B3D2' };
 export const projectGradient = `linear-gradient(135deg, ${PROJECT_COLORS.from}, ${PROJECT_COLORS.to})`;
 
+// Two kinds of investor: one brings a property ('asset'), the other brings money and looks for one ('capital')
+export const isCapital = (p) => p?.kind === 'capital';
+
+/** Price range of an investor's search: "5 000 000 – 20 000 000 DZD", "jusqu'à …", "à partir de …" or "À définir". */
+export function budgetRange(p, t, formatDZD) {
+  const min = Number(p.budgetMin) || 0;
+  const max = Number(p.budget) || 0;
+  if (min && max) return `${formatDZD(min)} – ${formatDZD(max)}`;
+  if (max) return t('Jusqu’à {v}', { v: formatDZD(max) });
+  if (min) return t('À partir de {v}', { v: formatDZD(min) });
+  return t('À définir');
+}
+
+/** Area wanted by an investor: "500 m² – 2 ha", "min. …", "max. …" or "Indifférente". */
+export function areaRange(p, t, lang = 'fr') {
+  const min = Number(p.area) || 0;
+  const max = Number(p.areaMax) || 0;
+  if (min && max) return `${formatArea(min, lang)} – ${formatArea(max, lang)}`;
+  if (min) return t('Min. {v}', { v: formatArea(min, lang) });
+  if (max) return t('Max. {v}', { v: formatArea(max, lang) });
+  return t('Indifférente');
+}
+
+/** "Hydra, Alger" or just "Alger" when the investor accepts any commune. */
+export const placeLabel = (p, t) => (p.city ? `${t(p.city)}, ${t(p.wilaya)}` : t(p.wilaya));
+
 /** "12 000 m²" or "1,2 ha" for large plots. */
 export function formatArea(m2, lang = 'fr') {
   const n = Number(m2) || 0;

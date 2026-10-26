@@ -12,7 +12,7 @@ import SaveProjectButton from '@/components/SaveProjectButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { formatArea, assetLabel, documentLabel, PROJECT_COLORS, projectGradient } from '@/lib/projects';
+import { formatArea, assetLabel, documentLabel, isCapital, budgetRange, areaRange, placeLabel, PROJECT_COLORS, projectGradient } from '@/lib/projects';
 import { useInitialData } from '@/components/InitialData';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
@@ -65,7 +65,15 @@ export default function ProjectPage() {
   const p = project;
   const images = (p.images || []).map((i) => getImageUrl(i.url || i));
   const mine = user && String(p.owner?._id || p.owner) === String(user._id);
-  const facts = [
+  const capital = isCapital(p);
+  const facts = capital ? [
+    { icon: Home, label: 'Bien recherché', value: assetLabel(p, t) },
+    { icon: MapPin, label: 'Emplacement souhaité', value: p.city ? placeLabel(p, t) : t('Toute la wilaya de {w}', { w: t(p.wilaya) }) },
+    { icon: Maximize2, label: 'Surface souhaitée', value: areaRange(p, t, lang) },
+    { icon: Coins, label: 'Budget', value: budgetRange(p, t, formatDZD) },
+    { icon: Building2, label: 'Type de projet', value: t(p.projectType) },
+    { icon: Handshake, label: 'Partenariat proposé', value: t(p.partnership) },
+  ] : [
     { icon: Home, label: 'Type de bien', value: assetLabel(p, t) },
     { icon: Maximize2, label: 'Surface', value: formatArea(p.area, lang) },
     { icon: Building2, label: 'Type de projet', value: t(p.projectType) },
@@ -93,8 +101,17 @@ export default function ProjectPage() {
           {/* Left: photos, facts, description */}
           <div className="space-y-6 lg:col-span-2">
             <div className="overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-black/5">
-              <div className="relative aspect-[16/9] bg-slate-100">
-                {images[photo] && <img src={images[photo]} alt={p.title} className="h-full w-full object-cover" />}
+              <div className={`relative bg-slate-100 ${capital ? 'aspect-[16/6]' : 'aspect-[16/9]'}`}>
+                {capital ? (
+                  // an investor's search has no photo: a banner with what they look for
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-6 text-center text-white" style={{ background: projectGradient }}>
+                    <Coins className="h-12 w-12" aria-hidden="true" />
+                    <p className="font-semibold text-white/85">{t('Investisseur cherche')}</p>
+                    <p className="text-2xl font-black">{assetLabel(p, t)} · {t(p.wilaya)}</p>
+                  </div>
+                ) : (
+                  images[photo] && <img src={images[photo]} alt={p.title} className="h-full w-full object-cover" />
+                )}
                 <div className="absolute end-4 top-4 flex flex-wrap justify-end gap-2">
                   <SaveProjectButton projectId={p._id} />
                   <ShareButton title={`${p.title} — ${t(p.city)}, ${t(p.wilaya)}`} text={t('Projet à la recherche d’un investisseur sur Meskan : {title}', { title: p.title })} />
@@ -113,12 +130,12 @@ export default function ProjectPage() {
 
             <div className="rounded-3xl bg-white p-6 shadow-card ring-1 ring-black/5">
               <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full px-3 py-1 font-bold text-white" style={{ background: projectGradient }}>{t('Recherche investisseur')}</span>
+                <span className="rounded-full px-3 py-1 font-bold text-white" style={{ background: projectGradient }}>{capital ? t('Investisseur cherche un bien') : t('Recherche investisseur')}</span>
                 <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">{p.reference}</span>
               </div>
               <h1 className="text-2xl font-black leading-tight md:text-3xl" style={{ color: PROJECT_COLORS.ink }} dir="auto">{p.title}</h1>
               <p className="mt-2 flex items-center gap-1 text-slate-500">
-                <MapPin className="h-4 w-4 text-[#00B3D2]" aria-hidden="true" /> {p.address ? `${p.address}, ` : ''}{t(p.city)}, {t(p.wilaya)}
+                <MapPin className="h-4 w-4 text-[#00B3D2]" aria-hidden="true" /> {p.address ? `${p.address}, ` : ''}{placeLabel(p, t)}
               </p>
 
               <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -134,13 +151,13 @@ export default function ProjectPage() {
 
               {p.description && (
                 <>
-                  <h2 className="mb-2 mt-8 text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Le projet imaginé')}</h2>
+                  <h2 className="mb-2 mt-8 text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{capital ? t('Ce que l’investisseur recherche') : t('Le projet imaginé')}</h2>
                   <p className="whitespace-pre-line leading-relaxed text-slate-700" dir="auto">{p.description}</p>
                 </>
               )}
               <p className="mt-6 flex flex-wrap gap-4 text-xs text-slate-400">
                 <span className="inline-flex items-center gap-1"><Eye className="h-4 w-4" aria-hidden="true" /> {t('{n} vue(s)', { n: p.views || 0 })}</span>
-                <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" aria-hidden="true" /> {t('{n} investisseur(s) intéressé(s)', { n: p.interestsCount || 0 })}</span>
+                <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" aria-hidden="true" /> {capital ? t('{n} proposition(s) reçue(s)', { n: p.interestsCount || 0 }) : t('{n} investisseur(s) intéressé(s)', { n: p.interestsCount || 0 })}</span>
               </p>
             </div>
 
@@ -155,7 +172,7 @@ export default function ProjectPage() {
           {/* Right: owner + interest form */}
           <aside className="space-y-6">
             <div className="rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/5">
-              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400 rtl:tracking-normal">{t('Propriétaire du bien')}</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400 rtl:tracking-normal">{capital ? t('Investisseur') : t('Propriétaire du bien')}</p>
               <div className="flex items-center gap-3">
                 <Avatar user={p.owner} className="h-12 w-12 rounded-full text-lg" initialClassName="bg-gradient-to-br from-[#0DD5C4] to-[#00B3D2] text-white" />
                 <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{p.owner?.fullName}</p>
@@ -165,7 +182,7 @@ export default function ProjectPage() {
                   <a href={`tel:${intlPhone(p.contactPhone)}`} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                     <Phone className="h-4 w-4" aria-hidden="true" /> {t('Appeler')}
                   </a>
-                  <a href={`https://wa.me/${intlPhone(p.contactPhone).replace('+', '')}?text=${encodeURIComponent(t('Bonjour, votre projet {ref} sur Meskan m’intéresse.', { ref: p.reference }))}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600">
+                  <a href={`https://wa.me/${intlPhone(p.contactPhone).replace('+', '')}?text=${encodeURIComponent(capital ? t('Bonjour, j’ai un bien qui correspond à votre recherche {ref} sur Meskan.', { ref: p.reference }) : t('Bonjour, votre projet {ref} sur Meskan m’intéresse.', { ref: p.reference }))}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600">
                     <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
                   </a>
                 </div>
@@ -174,7 +191,7 @@ export default function ProjectPage() {
 
             {mine ? (
               <Link href="/investor/projects" className="block rounded-3xl p-5 text-center font-bold text-white shadow-card" style={{ background: projectGradient }}>
-                {t('Gérer mon projet et voir les demandes')}
+                {capital ? t('Gérer ma recherche et voir les propositions') : t('Gérer mon projet et voir les demandes')}
               </Link>
             ) : (
               p.status === 'approved' && <InterestForm project={p} user={user} />
@@ -189,6 +206,7 @@ export default function ProjectPage() {
 
 /** "Je suis intéressé" — goes to the land owner (their space + email). */
 function InterestForm({ project, user }) {
+  const capital = isCapital(project); // an investor's search: the visitor offers a property
   const { t } = useT();
   const [form, setForm] = useState({ name: user?.fullName || '', phone: user?.phone || '', email: user?.email || '', amount: '', message: '' });
   const [sending, setSending] = useState(false);
@@ -222,7 +240,7 @@ function InterestForm({ project, user }) {
       <div className="rounded-3xl bg-white p-6 text-center shadow-card ring-1 ring-black/5">
         <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-emerald-500" aria-hidden="true" />
         <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Demande envoyée !')}</p>
-        <p className="mt-1 text-sm text-slate-500">{t('Le propriétaire a reçu vos coordonnées et vous contactera.')}</p>
+        <p className="mt-1 text-sm text-slate-500">{capital ? t('L’investisseur a reçu vos coordonnées et vous contactera.') : t('Le propriétaire a reçu vos coordonnées et vous contactera.')}</p>
       </div>
     );
   }
@@ -230,8 +248,8 @@ function InterestForm({ project, user }) {
   const input = 'w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#00B3D2]';
   return (
     <form onSubmit={submit} noValidate className="space-y-3 rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/5">
-      <h2 className="text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Ce projet vous intéresse ?')}</h2>
-      <p className="text-sm text-slate-500">{t('Envoyez votre demande au propriétaire : il la reçoit dans son espace et par email.')}</p>
+      <h2 className="text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{capital ? t('Vous avez ce bien ?') : t('Ce projet vous intéresse ?')}</h2>
+      <p className="text-sm text-slate-500">{capital ? t('Décrivez votre bien à l’investisseur : il reçoit votre proposition dans son espace et par email.') : t('Envoyez votre demande au propriétaire : il la reçoit dans son espace et par email.')}</p>
       <label className="block text-xs font-semibold text-slate-600">
         {t('Nom complet')} *
         <input value={form.name} onChange={set('name')} autoComplete="name" className={`${input} mt-1`} />
@@ -245,16 +263,16 @@ function InterestForm({ project, user }) {
         <input value={form.email} onChange={set('email')} type="email" autoComplete="email" className={`${input} mt-1`} />
       </label>
       <label className="block text-xs font-semibold text-slate-600">
-        {t('Montant que vous envisagez d’investir (DZD)')}
+        {capital ? t('Prix demandé (DZD)') : t('Montant que vous envisagez d’investir (DZD)')}
         <input value={form.amount} onChange={set('amount')} inputMode="numeric" dir="ltr" placeholder="50 000 000" className={`${input} mt-1 rtl:text-right`} />
       </label>
       <label className="block text-xs font-semibold text-slate-600">
         {t('Message')} *
-        <textarea value={form.message} onChange={set('message')} rows={4} maxLength={2000} placeholder={t('Présentez-vous et votre proposition…')} className={`${input} mt-1 resize-y`} />
+        <textarea value={form.message} onChange={set('message')} rows={4} maxLength={2000} placeholder={capital ? t('Votre bien : type, surface, emplacement, papiers…') : t('Présentez-vous et votre proposition…')} className={`${input} mt-1 resize-y`} />
       </label>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
       <button type="submit" disabled={sending} className="inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white shadow transition hover:brightness-95 disabled:opacity-60" style={{ background: projectGradient }}>
-        <Send className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" /> {sending ? t('Envoi...') : t('Envoyer ma demande')}
+        <Send className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" /> {sending ? t('Envoi...') : capital ? t('Envoyer ma proposition') : t('Envoyer ma demande')}
       </button>
     </form>
   );
