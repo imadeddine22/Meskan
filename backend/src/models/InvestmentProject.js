@@ -40,8 +40,9 @@ const investmentProjectSchema = new mongoose.Schema(
     budgetMin: { type: Number, min: 0 }, // 'capital': minimum of the price range
     ownerShare: { type: Number, min: 0, max: 100 }, // share of the project the property owner proposes to keep (%)
     images: [{ url: { type: String, required: true }, publicId: { type: String, required: true } }],
-    contactPhone: { type: String, default: '' },
-    contactEmail: { type: String, default: '' },
+    // The publisher's own contact: never public (Meskan is the intermediary); only the owner and the admins load it (+contactPhone)
+    contactPhone: { type: String, default: '', select: false },
+    contactEmail: { type: String, default: '', select: false },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending', index: true },
     rejectionReason: { type: String, default: '' },
     views: { type: Number, default: 0 },

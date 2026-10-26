@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, NO_DOCUMENT } from '../models/InvestmentProject.js';
 import InvestorInterest from '../models/InvestorInterest.js';
+import PricingSettings from '../models/PricingSettings.js';
+import User from '../models/User.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 import { paging, num } from '../utils/query.js';
@@ -29,6 +31,14 @@ const keptIds = (raw) => {
 };
 const notify = (to, subject, html) => to && sendEmail({ to, subject, html }).catch((e) => console.error('Email failed:', e.message));
 
+/** Meskan's own phone / email shown on every investment project (set by the admin). */
+export const meskanContact = async () => {
+  const s = await PricingSettings.findOne().select('investContact').lean();
+  return { phone: s?.investContact?.phone || '', email: s?.investContact?.email || '' };
+};
+/** Emails of the admins: they receive every investment request (Meskan is the intermediary). */
+const adminEmails = async () => (await User.find({ role: 'admin' }).select('email').lean()).map((u) => u.email).filter(Boolean);
+
 // GET /projects?kind=asset|capital&wilaya=&assetType=&projectType=&partnership=&minArea=&maxArea=&q=&sort=newest|area|budget&page=
 export const getProjects = async (req, res, next) => {
   try {
@@ -49,7 +59,8 @@ export const getProjects = async (req, res, next) => {
     const order = sort === 'area' ? { area: -1 } : sort === 'budget' ? { budget: -1 } : { createdAt: -1 };
     const { page, limit, skip } = paging(req.query, { def: 12, max: 50 });
     const [projects, total] = await Promise.all([
-      InvestmentProject.find(filter).sort(order).skip(skip).limit(limit).populate('owner', 'fullName avatar').lean(),
+      // no publisher name nor contact in the public list: Meskan puts people in touch
+      InvestmentProject.find(filter).sort(order).skip(skip).limit(limit).lean(),
       InvestmentProject.countDocuments(filter),
     ]);
     res.json({ success: true, total, page, pages: Math.ceil(total / limit) || 1, projects });
@@ -61,16 +72,20 @@ export const getProjects = async (req, res, next) => {
 // GET /projects/:id — public once approved; the owner and admins also see it before
 export const getProject = async (req, res, next) => {
   try {
-    const project = await InvestmentProject.findById(req.params.id).populate('owner', 'fullName avatar createdAt');
+    const project = await InvestmentProject.findById(req.params.id);
     if (!project || !canView(req, project)) return res.status(404).json({ success: false, message: 'Project not found' });
     const privileged = req.user && (req.user.role === 'admin' || isOwner(req, project));
     // ?noview=1: the server-side render of the page, so a visit is only counted once (by the browser)
     if (project.status === 'approved' && !isOwner(req, project) && !req.query.noview) {
       await InvestmentProject.updateOne({ _id: project._id }, { $inc: { views: 1 } });
     }
+    // visitors get the publisher's id only (no name, no contact); the owner and admins also get the private fields
     const body = project.toObject();
-    if (privileged) body.documentImages = (await InvestmentProject.findById(project._id).select('+documentImages').lean())?.documentImages || [];
-    res.json({ success: true, project: body });
+    if (privileged) {
+      const priv = await InvestmentProject.findById(project._id).select('+documentImages +contactPhone +contactEmail').lean();
+      Object.assign(body, { documentImages: priv?.documentImages || [], contactPhone: priv?.contactPhone || '', contactEmail: priv?.contactEmail || '' });
+    }
+    res.json({ success: true, project: body, contact: await meskanContact() });
   } catch (err) {
     next(err);
   }
@@ -79,7 +94,7 @@ export const getProject = async (req, res, next) => {
 // GET /projects/mine — the owner's projects with their unread interest requests
 export const getMyProjects = async (req, res, next) => {
   try {
-    const projects = await InvestmentProject.find({ owner: req.user._id }).select('+documentImages').sort({ createdAt: -1 }).lean();
+    const projects = await InvestmentProject.find({ owner: req.user._id }).select('+documentImages +contactPhone +contactEmail').sort({ createdAt: -1 }).lean();
     const unread = await InvestorInterest.aggregate([
       { $match: { owner: req.user._id, seen: false } },
       { $group: { _id: '$project', n: { $sum: 1 } } },
@@ -227,29 +242,45 @@ export const expressInterest = async (req, res, next) => {
     });
     await InvestmentProject.updateOne({ _id: project._id }, { $inc: { interestsCount: 1 } });
 
+    // Meskan is the intermediary: the admins get both parties' contacts, the publisher only learns a request arrived
+    const contacts = await InvestmentProject.findById(project._id).select('+contactPhone +contactEmail').lean();
+    const capital = project.kind === 'capital';
+    (await adminEmails()).forEach((to) =>
+      notify(
+        to,
+        `💼 Nouvelle demande d'investissement — ${project.title} (${project.reference})`,
+        `<p><strong>${escapeHtml(name)}</strong> — ${escapeHtml(phone)}${email ? ` · ${escapeHtml(email)}` : ''}${amount ? ` · ${capital ? 'Prix demandé' : 'Montant envisagé'} : ${Number(amount).toLocaleString('fr-DZ')} DZD` : ''}</p>
+         <blockquote>${escapeHtml(message)}</blockquote>
+         <p>Annonce : <strong>${escapeHtml(project.title)}</strong> (${escapeHtml(project.reference)}), publiée par ${escapeHtml(project.owner.fullName)} — ${escapeHtml(contacts?.contactPhone || '')} ${escapeHtml(contacts?.contactEmail || project.owner.email || '')}</p>
+         <p><a href="${CLIENT_URL}/admin/projects?status=requests">Voir toutes les demandes</a></p>`
+      )
+    );
     notify(
       project.owner.email,
-      project.kind === 'capital' ? `💼 Un propriétaire répond à votre recherche — ${project.title}` : `💼 Un investisseur s'intéresse à votre projet — ${project.title}`,
+      capital ? `💼 Une proposition pour votre recherche — ${project.title}` : `💼 Un investisseur s'intéresse à votre projet — ${project.title}`,
       `<p>Bonjour ${escapeHtml(project.owner.fullName)},</p>
-       <p><strong>${escapeHtml(name)}</strong> s'intéresse à votre projet <strong>${escapeHtml(project.title)}</strong> (${escapeHtml(project.reference)}).</p>
-       <p>Téléphone : ${escapeHtml(phone)}${email ? ` · Email : ${escapeHtml(email)}` : ''}${amount ? ` · Montant envisagé : ${Number(amount).toLocaleString('fr-DZ')} DZD` : ''}</p>
-       <blockquote>${escapeHtml(message)}</blockquote>
-       <p><a href="${CLIENT_URL}/projects/mine">Voir les demandes dans votre espace</a></p>`
+       <p>Une nouvelle demande est arrivée pour <strong>${escapeHtml(project.title)}</strong> (${escapeHtml(project.reference)}).</p>
+       <p>L'équipe Meskan l'étudie et vous contactera pour vous mettre en relation.</p>
+       <p><a href="${CLIENT_URL}/projects/mine">Voir dans votre espace</a></p>`
     );
-    res.status(201).json({ success: true, message: 'Your request has been sent to the owner', interest: { _id: interest._id } });
+    res.status(201).json({ success: true, message: 'Your request has been sent to Meskan', interest: { _id: interest._id } });
   } catch (err) {
     next(err);
   }
 };
 
-// GET /projects/:id/interests — requests received for one project (owner or admin); marks them seen
+// GET /projects/:id/interests — requests received for one project. Admins see everything; the publisher
+// only sees the message and amount (no name, phone or email: Meskan puts them in touch)
 export const getProjectInterests = async (req, res, next) => {
   try {
     const project = await InvestmentProject.findById(req.params.id).select('owner title');
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    if (req.user.role !== 'admin' && !isOwner(req, project)) return res.status(403).json({ success: false, message: 'Not authorized' });
-    const interests = await InvestorInterest.find({ project: project._id }).sort({ createdAt: -1 }).lean();
-    if (isOwner(req, project)) await InvestorInterest.updateMany({ project: project._id, seen: false }, { $set: { seen: true } });
+    const admin = req.user.role === 'admin';
+    if (!admin && !isOwner(req, project)) return res.status(403).json({ success: false, message: 'Not authorized' });
+    const interests = await InvestorInterest.find({ project: project._id })
+      .select(admin ? '' : 'amount message createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
     res.json({ success: true, interests });
   } catch (err) {
     next(err);
@@ -258,12 +289,38 @@ export const getProjectInterests = async (req, res, next) => {
 
 // ── Admin ───────────────────────────────────────────────────────
 
+// GET /admin/project-interests — every request, with both parties' contacts (Meskan is the intermediary)
+export const getAllInterests = async (req, res, next) => {
+  try {
+    const interests = await InvestorInterest.find()
+      .sort({ createdAt: -1 })
+      .limit(300)
+      .populate({ path: 'project', select: 'title reference kind wilaya city +contactPhone +contactEmail', populate: { path: 'owner', select: 'fullName email phone' } })
+      .lean();
+    const unseen = interests.filter((i) => !i.seen).length;
+    res.json({ success: true, unseen, interests });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT /admin/project-interests/:id/seen { seen } — mark a request as handled (or not)
+export const markInterestSeen = async (req, res, next) => {
+  try {
+    const interest = await InvestorInterest.findByIdAndUpdate(req.params.id, { seen: req.body?.seen !== false }, { new: true });
+    if (!interest) return res.status(404).json({ success: false, message: 'Request not found' });
+    res.json({ success: true, interest });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /admin/projects?status=pending|approved|rejected
 export const getProjectQueue = async (req, res, next) => {
   try {
     const status = ['approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
     const [projects, pending] = await Promise.all([
-      InvestmentProject.find({ status }).select('+documentImages').populate('owner', 'fullName email phone').sort({ updatedAt: -1 }).lean(),
+      InvestmentProject.find({ status }).select('+documentImages +contactPhone +contactEmail').populate('owner', 'fullName email phone').sort({ updatedAt: -1 }).lean(),
       InvestmentProject.countDocuments({ status: 'pending' }),
     ]);
     res.json({ success: true, pending, projects });

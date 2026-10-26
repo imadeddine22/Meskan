@@ -146,7 +146,6 @@ function MyProjects({ inDashboard }) {
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button type="button" onClick={() => showInterests(p)} className="relative inline-flex items-center gap-1.5 rounded-lg bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-800 hover:bg-cyan-100">
                           <Users className="h-4 w-4" aria-hidden="true" /> {capital ? t('Propositions reçues') : t('Demandes d’investisseurs')} ({p.interestsCount || 0})
-                          {p.unreadInterests > 0 && <span className="absolute -end-1.5 -top-1.5 rounded-full bg-pink-500 px-1.5 text-[11px] font-bold text-white">{p.unreadInterests}</span>}
                         </button>
                         <button type="button" onClick={() => setEditing(p)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
                           <Pencil className="h-4 w-4" aria-hidden="true" /> {t('Modifier')}
@@ -166,22 +165,24 @@ function MyProjects({ inDashboard }) {
                       {interests.length === 0 ? (
                         <p className="text-sm text-slate-500">{t('Aucune demande pour le moment.')}</p>
                       ) : (
-                        <ul className="space-y-3">
-                          {interests.map((i) => (
-                            <li key={i._id} className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{i.name}</p>
-                                <span className="text-xs text-slate-400">{new Date(i.createdAt).toLocaleString(dateLocale())}</span>
-                              </div>
-                              {i.amount ? <p className="text-sm font-semibold text-emerald-700">{capital ? t('Prix demandé :') : t('Montant envisagé :')} {formatDZD(i.amount)}</p> : null}
-                              <p className="mt-1 whitespace-pre-line text-sm text-slate-700" dir="auto">{i.message}</p>
-                              <div className="mt-2 flex flex-wrap gap-3 text-sm">
-                                <a href={`tel:${i.phone.replace(/[^\d+]/g, '')}`} dir="ltr" className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Phone className="h-4 w-4" aria-hidden="true" /> {i.phone}</a>
-                                {i.email && <a href={`mailto:${i.email}`} className="inline-flex items-center gap-1 font-semibold text-[#00B3D2] hover:underline"><Mail className="h-4 w-4" aria-hidden="true" /> {i.email}</a>}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
+                        <>
+                          {/* Meskan is the intermediary: the publisher sees the request, not who sent it */}
+                          <p className="mb-3 flex items-start gap-1.5 text-xs text-slate-500">
+                            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {t('Les coordonnées restent chez Meskan : notre équipe vous contacte pour vous mettre en relation.')}
+                          </p>
+                          <ul className="space-y-3">
+                            {interests.map((i) => (
+                              <li key={i._id} className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{i.name || (capital ? t('Proposition d’un propriétaire') : t('Demande d’un investisseur'))}</p>
+                                  <span className="text-xs text-slate-400">{new Date(i.createdAt).toLocaleString(dateLocale())}</span>
+                                </div>
+                                {i.amount ? <p className="text-sm font-semibold text-emerald-700">{capital ? t('Prix demandé :') : t('Montant envisagé :')} {formatDZD(i.amount)}</p> : null}
+                                <p className="mt-1 whitespace-pre-line text-sm text-slate-700" dir="auto">{i.message}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
                       )}
                     </div>
                   )}
@@ -464,6 +465,9 @@ function ProjectForm({ project, kind = 'asset', user, onClose, onSaved }) {
             {t('Email de contact')}
             <input value={form.contactEmail} onChange={set('contactEmail')} type="email" className={`${input} mt-1`} />
           </label>
+          <p className="-mt-2 flex items-start gap-1.5 text-xs text-slate-500 sm:col-span-2">
+            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {t('Vos coordonnées restent privées : seule l’administration de Meskan les voit. Les visiteurs contactent Meskan, qui vous met en relation.')}
+          </p>
 
           {/* An investor's search has no property yet: no document, no photos */}
           {!capital && (<>

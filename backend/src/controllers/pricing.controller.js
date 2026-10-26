@@ -28,6 +28,10 @@ export const updatePrices = async (req, res, next) => {
     if (growthYearlyPrice !== undefined) settings.growthYearlyPrice = Number(growthYearlyPrice);
     if (proMonthlyPrice !== undefined) settings.proMonthlyPrice = Number(proMonthlyPrice);
     if (proYearlyPrice !== undefined) settings.proYearlyPrice = Number(proYearlyPrice);
+    for (const k of ['phone', 'email']) {
+      const v = req.body.investContact?.[k];
+      if (typeof v === 'string') settings.investContact[k] = v.trim().slice(0, k === 'phone' ? 30 : 120);
+    }
     for (const cur of ['TND', 'MAD']) {
       const rate = Number(req.body.exchangeRates?.[cur]);
       if (req.body.exchangeRates?.[cur] !== undefined && Number.isFinite(rate) && rate > 0) settings.exchangeRates[cur] = rate;

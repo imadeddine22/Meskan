@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { MapPin, Maximize2, FileCheck2, Coins, PieChart, Handshake, Building2, Home, Send, CheckCircle2, Phone, MessageCircle, ArrowLeft, Eye, Users } from 'lucide-react';
+import { MapPin, Maximize2, FileCheck2, Coins, PieChart, Handshake, Building2, Home, Send, CheckCircle2, Phone, MessageCircle, ArrowLeft, Eye, Users, ShieldCheck, Mail } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from '@/components/LocaleLink';
-import Avatar from '@/components/Avatar';
 import ShareButton from '@/components/ShareButton';
 import SaveProjectButton from '@/components/SaveProjectButton';
 import LocationMap from '@/components/LocationMap';
@@ -33,11 +32,16 @@ export default function ProjectPage() {
   const [project, setProject] = useState(initial?.project?._id === id ? initial.project : null);
   const [missing, setMissing] = useState(false);
   const [photo, setPhoto] = useState(0);
+  // Meskan's own phone / email: the intermediary between the two parties (the publisher's contact is never public)
+  const [contact, setContact] = useState(initial?.project?._id === id ? initial.contact || {} : {});
 
   useEffect(() => {
     api
       .get(`/projects/${id}`)
-      .then(({ data }) => setProject(data.project))
+      .then(({ data }) => {
+        setProject(data.project);
+        setContact(data.contact || {});
+      })
       .catch(() => setMissing(true));
   }, [id]);
 
@@ -169,22 +173,36 @@ export default function ProjectPage() {
             )}
           </div>
 
-          {/* Right: owner + interest form */}
+          {/* Right: Meskan (the intermediary) + interest form. The publisher's name and phone are never shown. */}
           <aside className="space-y-6">
             <div className="rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/5">
-              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400 rtl:tracking-normal">{capital ? t('Investisseur') : t('Propriétaire du bien')}</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400 rtl:tracking-normal">{t('Votre contact pour ce projet')}</p>
               <div className="flex items-center gap-3">
-                <Avatar user={p.owner} className="h-12 w-12 rounded-full text-lg" initialClassName="bg-gradient-to-br from-[#0DD5C4] to-[#00B3D2] text-white" />
-                <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{p.owner?.fullName}</p>
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-white" style={{ background: projectGradient }}>
+                  <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Meskan — intermédiaire')}</p>
+                  <p className="text-xs text-slate-500">{t('Nous vous mettons en relation en toute confidentialité.')}</p>
+                </div>
               </div>
-              {p.contactPhone && !mine && (
+              {!mine && (contact.phone || contact.email) && (
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <a href={`tel:${intlPhone(p.contactPhone)}`} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                    <Phone className="h-4 w-4" aria-hidden="true" /> {t('Appeler')}
-                  </a>
-                  <a href={`https://wa.me/${intlPhone(p.contactPhone).replace('+', '')}?text=${encodeURIComponent(capital ? t('Bonjour, j’ai un bien qui correspond à votre recherche {ref} sur Meskan.', { ref: p.reference }) : t('Bonjour, votre projet {ref} sur Meskan m’intéresse.', { ref: p.reference }))}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600">
-                    <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
-                  </a>
+                  {contact.phone && (
+                    <>
+                      <a href={`tel:${intlPhone(contact.phone)}`} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        <Phone className="h-4 w-4" aria-hidden="true" /> {t('Appeler')}
+                      </a>
+                      <a href={`https://wa.me/${intlPhone(contact.phone).replace('+', '')}?text=${encodeURIComponent(capital ? t('Bonjour, j’ai un bien qui correspond à la recherche {ref} sur Meskan.', { ref: p.reference }) : t('Bonjour, le projet {ref} sur Meskan m’intéresse.', { ref: p.reference }))}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600">
+                        <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
+                      </a>
+                    </>
+                  )}
+                  {contact.email && (
+                    <a href={`mailto:${contact.email}?subject=${encodeURIComponent(`${p.reference} — ${p.title}`)}`} className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                      <Mail className="h-4 w-4" aria-hidden="true" /> {contact.email}
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -240,7 +258,7 @@ function InterestForm({ project, user }) {
       <div className="rounded-3xl bg-white p-6 text-center shadow-card ring-1 ring-black/5">
         <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-emerald-500" aria-hidden="true" />
         <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Demande envoyée !')}</p>
-        <p className="mt-1 text-sm text-slate-500">{capital ? t('L’investisseur a reçu vos coordonnées et vous contactera.') : t('Le propriétaire a reçu vos coordonnées et vous contactera.')}</p>
+        <p className="mt-1 text-sm text-slate-500">{t('L’équipe Meskan a reçu votre demande et vous contactera pour vous mettre en relation.')}</p>
       </div>
     );
   }
@@ -249,7 +267,7 @@ function InterestForm({ project, user }) {
   return (
     <form onSubmit={submit} noValidate className="space-y-3 rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/5">
       <h2 className="text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{capital ? t('Vous avez ce bien ?') : t('Ce projet vous intéresse ?')}</h2>
-      <p className="text-sm text-slate-500">{capital ? t('Décrivez votre bien à l’investisseur : il reçoit votre proposition dans son espace et par email.') : t('Envoyez votre demande au propriétaire : il la reçoit dans son espace et par email.')}</p>
+      <p className="text-sm text-slate-500">{capital ? t('Décrivez votre bien : l’équipe Meskan reçoit votre proposition et vous met en relation avec l’investisseur.') : t('Envoyez votre demande : l’équipe Meskan la reçoit et vous met en relation avec le propriétaire.')}</p>
       <label className="block text-xs font-semibold text-slate-600">
         {t('Nom complet')} *
         <input value={form.name} onChange={set('name')} autoComplete="name" className={`${input} mt-1`} />
