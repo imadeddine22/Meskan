@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from '@/components/LocaleLink';
+import PasswordInput from '@/components/PasswordInput';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
 import { spaceHome } from '@/lib/spaces';
@@ -86,9 +87,8 @@ function LoginForm() {
                 {t('Mot de passe oublié ?')}
               </Link>
             </div>
-            <input
+            <PasswordInput
               id="login-password"
-              type="password"
               autoComplete="current-password"
               required
               value={form.password}

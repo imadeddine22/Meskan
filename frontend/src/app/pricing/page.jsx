@@ -8,6 +8,21 @@ import Link from '@/components/LocaleLink';
 import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+
+// Launch period: every plan is free. Set to false to show the paid prices again.
+const LAUNCH_FREE = true;
+
+const LAUNCH_FAQS = [
+  {
+    q: "Les plans sont-ils vraiment gratuits ?",
+    a: "Oui. Pendant le lancement de Meskan, tous les plans (Starter, Growth et Pro) sont gratuits, sans aucun paiement. Nous vous préviendrons à l'avance avant toute mise en place d'un abonnement payant."
+  },
+  {
+    q: "Y a-t-il des frais ou commissions supplémentaires sur mes réservations ?",
+    a: "Non. Meskan ne prélève aucune commission sur vos réservations : vous gardez 100% de vos gains."
+  }
+];
+
 const FAQS = [
   {
     q: "Quels sont les modes de paiement acceptés ?",
@@ -18,8 +33,8 @@ const FAQS = [
     a: "Oui, absolument. Vous pouvez mettre à niveau, rétrograder ou annuler votre abonnement à tout moment depuis vos paramètres de profil. En cas d'annulation, votre abonnement reste actif jusqu'à la fin de la période facturée."
   },
   {
-    q: "Quelle est la différence entre la facturation mensuelle et annuelle ?",
-    a: "L'abonnement annuel vous permet d'économiser l'équivalent de 2 mois d'abonnement gratuit (soit environ 17% de réduction sur l'année) et vous évite d'avoir à renouveler chaque mois."
+    q: "Quelle est la durée de chaque formule ?",
+    a: "Starter : 15 jours gratuits pour essayer Meskan. Growth : abonnement mensuel. Pro : abonnement annuel, sans renouvellement chaque mois."
   },
   {
     q: "Y a-t-il des frais ou commissions supplémentaires sur mes réservations ?",
@@ -47,6 +62,35 @@ const DoubleLoopIcon = ({ color = 'text-slate-300' }) => (
     <path d="M16 8 C6 8, 6 24, 16 24 C22 24, 26 8, 32 8 C42 8, 42 24, 32 24 C26 24, 22 8, 16 8 Z" />
   </svg>
 );
+
+// Price line of a plan card; during the launch it only shows "Gratuit" (no regular price)
+function PlanPrice({ amount, period, t, compact = false }) {
+  if (LAUNCH_FREE) {
+    return (
+      <div className={compact ? 'mt-2' : 'mt-6'}>
+        <span className="block text-4xl font-black text-slate-800 tracking-tight">{t('Gratuit')}</span>
+        <p className="mt-2 inline-block rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{t('Gratuit pendant le lancement')}</p>
+      </div>
+    );
+  }
+  if (!amount) {
+    return (
+      <div className={compact ? 'mt-2' : 'mt-6'}>
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl font-black text-slate-800 tracking-tight">0</span>
+          <span className="text-xs font-bold text-slate-400">{t('DZD /')} {t(period)}</span>
+        </div>
+        <p className="mt-2 inline-block rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{t('Essai gratuit de 15 jours')}</p>
+      </div>
+    );
+  }
+  return (
+    <div className={`flex items-baseline gap-1 ${compact ? 'mt-2' : 'mt-6'}`}>
+      <span className="text-4xl font-black text-slate-800 tracking-tight">{new Intl.NumberFormat('fr-DZ').format(amount)}</span>
+      <span className="text-xs font-bold text-slate-400">{t('DZD /')} {t(period)}</span>
+    </div>
+  );
+}
 
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
@@ -76,7 +120,7 @@ function FaqItem({ q, a }) {
 
 export default function PricingPage() {
   const { t } = useT();
-  const [billing, setBilling] = useState('monthly'); // 'monthly' | 'yearly'
+  // Each plan has its own period: Starter = 15 days free, Growth = monthly, Pro = yearly
   const [prices, setPrices] = useState({
     growthMonthly: 2900,
     growthYearly: 29000,
@@ -108,7 +152,7 @@ export default function PricingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60"></div>
         <div className="relative z-10 max-w-4xl mx-auto">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-4 py-1.5 text-xs font-extrabold text-brand-600 uppercase tracking-widest mb-4 border border-brand-200 shadow-sm animate-pulse">
-            {t('✦ Nouveau Modèle d\'Abonnement')}
+            {LAUNCH_FREE ? t('✦ Tous les plans sont gratuits pendant le lancement') : t('✦ Nouveau Modèle d\'Abonnement')}
           </span>
           <h1 className="text-4xl md:text-6xl font-black font-serif text-slate-800 tracking-tight leading-none">
             {t('Flexible pricing plans')} <br />
@@ -118,28 +162,6 @@ export default function PricingPage() {
             {t('Start free, scale as you grow. Choose the plan that matches your customer engagement goals. Aucune commission sur vos gains.')}
           </p>
 
-          {/* Billing Switch Toggle */}
-          <div className="mt-10 inline-flex items-center gap-3 bg-slate-100 p-1.5 rounded-full border border-slate-200 shadow-sm">
-            <button
-              onClick={() => setBilling('monthly')}
-              className={`rounded-full px-5 py-2 text-xs font-black transition-all ${
-                billing === 'monthly' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {t('Mensuel')}
-            </button>
-            <button
-              onClick={() => setBilling('yearly')}
-              className={`rounded-full px-5 py-2 text-xs font-black transition-all flex items-center gap-1.5 ${
-                billing === 'yearly' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {t('Annuel')}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${billing === 'yearly' ? 'bg-white text-brand-700' : 'bg-brand-100 text-brand-700'}`}>
-                -17%
-              </span>
-            </button>
-          </div>
         </div>
       </section>
 
@@ -169,10 +191,7 @@ export default function PricingPage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Starter Plan')}</h3>
                 <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('Best for small teams getting started.')}</p>
-                <div className="flex items-baseline gap-1 mt-6">
-                  <span className="text-4xl font-black text-slate-800 tracking-tight">0</span>
-                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
-                </div>
+                <PlanPrice amount={0} period="15 jours" t={t} />
               </div>
               <Link
                 href="/register"
@@ -193,18 +212,13 @@ export default function PricingPage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Growth Plan')}</h3>
                 <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('For scaling teams ready to automate journeys.')}</p>
-                <div className="flex items-baseline gap-1 mt-6">
-                  <span className="text-4xl font-black text-slate-800 tracking-tight">
-                    {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)}
-                  </span>
-                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
-                </div>
+                <PlanPrice amount={prices.growthMonthly} period="mois" t={t} />
               </div>
               <Link
                 href="/register?plan=growth"
                 className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-white bg-slate-900 hover:bg-slate-800 shadow-md transition"
               >
-                {t('Start free trial')}
+                {LAUNCH_FREE ? t('Get started free') : t('Choisir ce plan')}
               </Link>
             </div>
 
@@ -216,18 +230,13 @@ export default function PricingPage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Pro Plan')}</h3>
                 <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('For businesses that need customization.')}</p>
-                <div className="flex items-baseline gap-1 mt-6">
-                  <span className="text-4xl font-black text-slate-800 tracking-tight">
-                    {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)}
-                  </span>
-                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
-                </div>
+                <PlanPrice amount={prices.proYearly} period="an" t={t} />
               </div>
               <Link
-                href="/contact?subject=pro-plan"
+                href={LAUNCH_FREE ? '/register?plan=pro' : '/contact?subject=pro-plan'}
                 className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition"
               >
-                {t('Book demo')}
+                {LAUNCH_FREE ? t('Get started free') : t('Book demo')}
               </Link>
             </div>
 
@@ -270,7 +279,7 @@ export default function PricingPage() {
           {/* Card 1 */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Starter Plan')}</h3>
-            <p className="text-4xl font-black text-slate-800 mt-2">{t('0 DZD')} <span className="text-xs text-slate-400 font-bold">/ {billing === 'monthly' ? t('mois') : 'an'}</span></p>
+            <PlanPrice amount={0} period="15 jours" t={t} compact />
             <ul className="mt-4 space-y-2">
               <li className="text-xs text-slate-600 font-semibold">{t('1 établissement')}</li>
               <li className="text-xs text-slate-600 font-semibold">{t('5 photos max')}</li>
@@ -284,10 +293,7 @@ export default function PricingPage() {
           <div className="bg-white rounded-2xl p-6 border-2 border-teal-500 shadow-sm relative">
             <span className="absolute -top-3.5 right-6 bg-teal-500 text-white font-extrabold text-[8px] uppercase px-3 py-0.5 rounded-full">{t('Most Popular')}</span>
             <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Growth Plan')}</h3>
-            <p className="text-4xl font-black text-slate-800 mt-2">
-              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)} {t('DZD')}
-              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? t('mois') : 'an'}</span>
-            </p>
+            <PlanPrice amount={prices.growthMonthly} period="mois" t={t} compact />
             <ul className="mt-4 space-y-2">
               <li className="text-xs text-slate-600 font-semibold">{t('Jusqu\'à 5 établissements')}</li>
               <li className="text-xs text-slate-600 font-semibold">{t('Photos illimitées')}</li>
@@ -295,24 +301,21 @@ export default function PricingPage() {
               <li className="text-xs text-slate-600 font-semibold">{t('Support prioritaire 7j/7')}</li>
             </ul>
             <Link href="/register?plan=growth" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-white bg-slate-900">
-              {t('Start free trial')}
+              {LAUNCH_FREE ? t('Get started free') : t('Choisir ce plan')}
             </Link>
           </div>
           {/* Card 3 */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Pro Plan')}</h3>
-            <p className="text-4xl font-black text-slate-800 mt-2">
-              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)} {t('DZD')}
-              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? t('mois') : 'an'}</span>
-            </p>
+            <PlanPrice amount={prices.proYearly} period="an" t={t} compact />
             <ul className="mt-4 space-y-2">
               <li className="text-xs text-slate-600 font-semibold">{t('Établissements illimités')}</li>
               <li className="text-xs text-slate-600 font-semibold">{t('Badge vérifié')}</li>
               <li className="text-xs text-slate-600 font-semibold">{t('API Sync Calendrier')}</li>
               <li className="text-xs text-slate-600 font-semibold">{t('Dossiers de location')}</li>
             </ul>
-            <Link href="/contact?subject=pro-plan" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-slate-700 border border-slate-200">
-              {t('Book demo')}
+            <Link href={LAUNCH_FREE ? '/register?plan=pro' : '/contact?subject=pro-plan'} className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-slate-700 border border-slate-200">
+              {LAUNCH_FREE ? t('Get started free') : t('Book demo')}
             </Link>
           </div>
         </div>
@@ -385,7 +388,7 @@ export default function PricingPage() {
 
             {/* Right Column (60% width) */}
             <div className="w-full lg:w-[60%] flex flex-col gap-4">
-              {FAQS.map((faq, i) => (
+              {(LAUNCH_FREE ? LAUNCH_FAQS : FAQS).map((faq, i) => (
                 <FaqItem key={i} q={t(faq.q)} a={t(faq.a)} />
               ))}
             </div>

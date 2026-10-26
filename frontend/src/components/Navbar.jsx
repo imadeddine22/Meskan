@@ -91,14 +91,17 @@ export default function Navbar() {
   const dashHref = spaceHome(user?.role);
 
   const navLinks = [
-    { label: t.navHome, href: '/' },
+    // the logo already goes home: on computers the menu keeps that room for the pricing page
+    { label: t.navHome, href: '/', mobileOnly: true },
     { label: t.navHotels, href: '/hotels' },
     { label: t.navHouses, href: '/houses' },
     { label: t.navSales || 'Ventes', href: '/sales' },
     { label: 'Reels', href: '/reels' },
     { label: t.navDestinations, href: '/destinations' },
-    // land owners & investors (pricing stays in the footer, the menu is full at 1280 px)
+    // land owners & investors
     { label: 'Investir', href: '/investir' },
+    // plans for hosts and sellers
+    { label: 'Tarifs', href: '/pricing' },
     // the contact form goes straight to the site owner (Admin → Messages)
     { label: 'Contact', href: '/contact' },
   ];
@@ -114,7 +117,7 @@ export default function Navbar() {
 
         {/* Center: Navigation Links */}
         <nav className="hidden xl:flex items-center gap-1 bg-gray-50/80 p-1.5 rounded-full border border-gray-200/60">
-          {navLinks.map((link) => {
+          {navLinks.filter((l) => !l.mobileOnly).map((link) => {
             const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
             return (
               <Link

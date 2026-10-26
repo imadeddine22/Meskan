@@ -1,12 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Search, MapPin, X } from 'lucide-react';
+import { Search, MapPin, X, Tag, House, BedDouble, Landmark, ChevronDown, BadgeDollarSign } from 'lucide-react';
+import Link from '@/components/LocaleLink';
 import { QUICK_AREAS } from '@/lib/data';
 import { WILAYAS } from '@/lib/wilayas';
 import { useT } from '@/lib/i18n/useT';
 
 const SEARCH_DELAY_MS = 350;
+
+// Shortcuts to the main sections, computers only (phones have the menu)
+const SHORTCUTS = [
+  { href: '/sales', key: 'navSales', icon: Tag },
+  { href: '/houses', key: 'navHouses', icon: House },
+  { href: '/hotels', key: 'navHotels', icon: BedDouble },
+  { href: '/investir', key: 'Investir', icon: Landmark, highlight: true },
+  { href: '/pricing', key: 'Tarifs', icon: BadgeDollarSign },
+];
 
 /**
  * Home search. Filters the hotels / houses / sales sections of the home page
@@ -16,6 +26,7 @@ export default function Hero({ value = '', onSearch }) {
   const { t, lang } = useT();
 
   const [text, setText] = useState(value);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false); // quick-access buttons, opened with the arrow
   const timer = useRef(null);
   const lastSent = useRef(value);
 
@@ -57,7 +68,60 @@ export default function Hero({ value = '', onSearch }) {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-white to-gray-50 pb-16 pt-12 sm:pt-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+        {/* Shortcuts (computers only): hidden behind an arrow; when opened, a column in the empty left
+            area on wide screens, a row above the title on smaller computers */}
+        <div className="mb-8 hidden flex-col items-center gap-2 lg:flex xl:absolute xl:left-4 xl:top-0 xl:mb-0 xl:w-40 xl:items-start">
+          <button
+            type="button"
+            onClick={() => setShortcutsOpen((o) => !o)}
+            aria-expanded={shortcutsOpen}
+            aria-controls="hero-shortcuts"
+            aria-label={shortcutsOpen ? t('Masquer l’accès rapide') : t('Accès rapide')}
+            title={t('Accès rapide')}
+            className="relative grid h-11 w-11 place-items-center rounded-full text-white shadow-lg ring-4 ring-white transition hover:scale-105 hover:shadow-xl"
+            style={{ background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' }}
+          >
+            {/* soft pulse while closed, so visitors notice it */}
+            {!shortcutsOpen && <span aria-hidden="true" className="absolute inset-0 rounded-full bg-[#0DD5C4]/40 motion-safe:animate-ping" />}
+            <ChevronDown className={`relative h-6 w-6 transition-transform duration-200 ${shortcutsOpen ? 'rotate-180' : ''}`} strokeWidth={2.5} aria-hidden="true" />
+          </button>
+          {/* Always rendered so it can animate both ways: the list unfolds (grid rows 0fr → 1fr)
+              and the buttons fade / slide in one after another */}
+          <div
+            className={`grid w-full transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${
+              shortcutsOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
+            aria-hidden={!shortcutsOpen}
+          >
+            <nav
+              id="hero-shortcuts"
+              aria-label={t('Accès rapide')}
+              className="flex min-h-0 flex-wrap justify-center gap-2 overflow-hidden p-1 xl:flex-col xl:flex-nowrap"
+            >
+              {SHORTCUTS.map(({ href, key, icon: Icon, highlight }, i) => (
+                <Link
+                  key={href}
+                  href={href}
+                  tabIndex={shortcutsOpen ? undefined : -1}
+                  className={`group inline-flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-bold shadow-sm ring-1 transition duration-300 ease-out hover:shadow-md motion-reduce:transition-none ${
+                    shortcutsOpen ? 'translate-y-0 opacity-100 hover:-translate-y-0.5' : '-translate-y-2 opacity-0'
+                  } ${highlight ? 'text-[#0b2a3a] ring-transparent' : 'bg-white text-ink ring-gray-100 hover:ring-brand-200'}`}
+                  style={{
+                    ...(highlight ? { background: 'linear-gradient(135deg, #0DD5C4, #00B3D2)' } : {}),
+                    transitionDelay: shortcutsOpen ? `${80 + i * 60}ms` : '0ms', // one after another when opening
+                  }}
+                >
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${highlight ? 'bg-white/30' : 'bg-brand-50 text-brand-600'}`}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="flex-1 whitespace-nowrap xl:text-[13px]">{t[key] || t(key)}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+
         {/* Title */}
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-black tracking-tight text-ink sm:text-5xl lg:text-6xl">

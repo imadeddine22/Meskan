@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, FileText, ShieldCheck, MapPin, ChartNoAxesCombined, Sprout, Play } from 'lucide-react';
+import { ArrowRight, FileText, ShieldCheck, MapPin, ChartNoAxesCombined, Sprout } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useT } from '@/lib/i18n/useT';
@@ -23,7 +23,7 @@ const FEATURES = [
 /**
  * Home page, before the footer: invitation to the investment section (/investir).
  * Text and logo are live (translated); the picture side is two overlapping photos (farmland +
- * a property) with a teal card and a play button, as in the designer's mock-up.
+ * a property) with a teal card, as in the designer's mock-up.
  */
 export default function InvestTeaser() {
   const { t } = useT();
@@ -75,7 +75,7 @@ export default function InvestTeaser() {
         </div>
 
         {/* Two photos, as in the design: farmland at the back, a property in front,
-            a teal card and a play button (→ the listings' videos) */}
+            and a teal card */}
         <div className="relative mx-auto w-full max-w-[560px] lg:order-1" dir="ltr">
           <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-6 end-6 h-48 w-auto opacity-[0.05]" />
           <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute -left-6 -top-6 h-40 w-auto opacity-[0.05]" />
@@ -99,15 +99,6 @@ export default function InvestTeaser() {
                 <span className="block text-xs text-white/85">{t('Terrains et biens à investir')}</span>
               </span>
             </div>
-            {/* play button: the listings' videos */}
-            <Link
-              href="/reels"
-              aria-label={t('Voir les vidéos des biens')}
-              className="absolute bottom-[14%] left-0 grid h-20 w-20 place-items-center rounded-full border-[6px] border-white text-white shadow-xl transition hover:scale-105"
-              style={{ background: INK }}
-            >
-              <Play className="ms-1 h-7 w-7 fill-white" aria-hidden="true" />
-            </Link>
           </div>
         </div>
       </div>

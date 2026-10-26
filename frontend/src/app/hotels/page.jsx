@@ -8,8 +8,6 @@ import HotelCard from '@/components/HotelCard';
 import api from '@/lib/api';
 import { useWilayas } from '@/hooks/useWilayas';
 
-import HotelsMap from '@/components/HotelsMap';
-
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
 import { COUNTRY_LIST, MULTI_COUNTRY, countryName } from '@/lib/countries';
@@ -24,7 +22,6 @@ export default function HotelsPage() {
   const [hotels, setHotels] = useState(initial?.hotels ?? []);
   const [loading, setLoading] = useState(!initial?.hotels);
   const [usingMock, setUsingMock] = useState(false);
-  const [activeHotelId, setActiveHotelId] = useState(null);
 
   const silentFirstFetch = useRef(Boolean(initial));
   const fetchHotels = async () => {
@@ -77,8 +74,9 @@ export default function HotelsPage() {
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* LEFT PANE - List */}
-        <div className="flex w-full flex-col overflow-y-auto lg:w-[55%]">
+        {/* List: full width, content centred (the map was removed at the owner's request) */}
+        <div className="flex w-full flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-7xl">
           
           {/* Header & Filters (Sticky) */}
           <div className="sticky top-0 z-10 border-b border-gray-100 bg-white p-4 sm:p-6 shadow-sm">
@@ -158,27 +156,17 @@ export default function HotelsPage() {
             ) : hotels.length === 0 ? (
               <p className="py-10 text-center text-gray-400">{t('Aucun hôtel trouvé pour ces critères.')}</p>
             ) : (
-              <div className="flex flex-col gap-5">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {hotels.map((h) => (
                   <HotelCard 
                     key={h._id || h.id} 
-                    hotel={normalize(h)} 
-                    list={true} 
-                    onHover={setActiveHotelId} 
+                    hotel={normalize(h)}
                   />
                 ))}
               </div>
             )}
           </div>
-        </div>
-
-        {/* RIGHT PANE - Map */}
-        <div className="hidden lg:block lg:w-[45%] h-full bg-gray-100 relative shadow-inner z-0">
-          <HotelsMap 
-            hotels={hotels.map(normalize)} 
-            activeHotelId={activeHotelId} 
-            onHotelHover={setActiveHotelId} 
-          />
+          </div>
         </div>
       </div>
     </main>

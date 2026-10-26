@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle, Send, Bookmark, Landmark, FolderPlus } from 'lucide-react';
+import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle, Send, Bookmark, Landmark, FolderPlus, BadgeDollarSign } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import AccountMenu from '@/components/AccountMenu';
 import { SPACE_ROLES } from '@/lib/spaces';
@@ -17,12 +17,14 @@ const MENUS = {
     { href: '/owner/my-hotels', label: 'Mes hôtels', icon: Hotel },
     { href: '/owner/my-houses', label: 'Mes maisons', icon: Home },
     { href: '/owner/bookings', label: 'Réservations', icon: CalendarCheck },
+    { href: '/pricing', label: 'Tarifs et abonnements', icon: BadgeDollarSign },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/', label: 'Site public', icon: Globe },
   ],
   seller: [
     { href: '/seller/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     { href: '/seller/my-listings', label: 'Mes annonces', icon: Tag },
+    { href: '/pricing', label: 'Tarifs et abonnements', icon: BadgeDollarSign },
     { href: '/', label: 'Site public', icon: Globe },
   ],
   investor: [

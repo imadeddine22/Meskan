@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, LayoutDashboard, UserCircle, CalendarCheck, MessageCircle } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, UserCircle, CalendarCheck, MessageCircle, BadgeDollarSign } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import Avatar from '@/components/Avatar';
 import SpaceSwitcher from '@/components/SpaceSwitcher';
@@ -34,6 +34,7 @@ export default function AccountMenu() {
     { href: '/profile', label: 'Mon profil', icon: UserCircle },
     { href: '/my-bookings', label: 'Mes réservations', icon: CalendarCheck },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
+    { href: '/pricing', label: 'Tarifs et abonnements', icon: BadgeDollarSign },
   ];
 
   return (
