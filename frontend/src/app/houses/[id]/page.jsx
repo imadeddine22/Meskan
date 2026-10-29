@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { MapPin, BedDouble, Bath, Users, Wifi, Home, Star, Phone, Mail } from 'lucide-react';
 import MeskanContactCard from '@/components/MeskanContactCard';
+import { RENTAL_PERIODS, periodOf, isNightly, rentPrices } from '@/lib/rentals';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
@@ -71,6 +72,7 @@ export default function HouseDetailPage() {
 
   const images = house.images?.length ? house.images : [{ url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80' }];
   const deal = effectivePrice(house); // running owner discount, if any
+  const nightly = isNightly(house); // monthly / yearly rentals are not booked online
   const price = deal.price;
 
   return (
@@ -244,16 +246,26 @@ export default function HouseDetailPage() {
           }}>
             {/* Price header */}
             <div style={{ background: 'linear-gradient(135deg, #4c1d95, #7c3aed)', padding: '20px 24px' }}>
-              <p style={{ color: '#e9d5ff', fontSize: 13, margin: '0 0 4px' }}>{t('Prix par nuit')}</p>
-              <p style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0 }}>
-                {deal.discountPercent > 0 && (
-                  <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fecaca' }}>
-                    <s>{new Intl.NumberFormat('fr-DZ').format(deal.original)}</s> <span dir="ltr">-{deal.discountPercent} %</span>
-                  </span>
-                )}
-                {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) : '—'}
-                <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> {house.currency || 'DZD'}</span>
-              </p>
+              <p style={{ color: '#e9d5ff', fontSize: 13, margin: '0 0 4px' }}>{nightly ? t('Prix par nuit') : t(RENTAL_PERIODS.find((p) => p.key === periodOf(house))?.label)}</p>
+              {nightly ? (
+                <p style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0 }}>
+                  {deal.discountPercent > 0 && (
+                    <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fecaca' }}>
+                      <s>{new Intl.NumberFormat('fr-DZ').format(deal.original)}</s> <span dir="ltr">-{deal.discountPercent} %</span>
+                    </span>
+                  )}
+                  {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) : '—'}
+                  <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> {house.currency || 'DZD'}</span>
+                </p>
+              ) : (
+                // monthly / yearly rental: its price(s), without the nightly deal
+                rentPrices(house).map(({ amount, unit }) => (
+                  <p key={unit} style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: 0 }}>
+                    {amount > 0 ? new Intl.NumberFormat('fr-DZ').format(amount) : t('Sur demande')}
+                    <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> {amount > 0 ? `${house.currency || 'DZD'} ` : ''}{t(unit)}</span>
+                  </p>
+                ))
+              )}
             </div>
 
             <div style={{ padding: 24 }}>
@@ -261,7 +273,7 @@ export default function HouseDetailPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
                 {[
                   { icon: <BedDouble size={16} />, label: t('{n} chambres', { n: house.rooms || '—' }) },
-                  { icon: <Bath size={16} />, label: `${house.bathrooms || '—'} salles de bain` },
+                  { icon: <Bath size={16} />, label: t('{n} salles de bain', { n: house.bathrooms || '—' }) },
                   { icon: <Users size={16} />, label: t("Jusqu'à {n} personnes", { n: house.capacity || '—' }) },
                 ].map((f) => (
                   <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#475569' }}>
@@ -271,18 +283,24 @@ export default function HouseDetailPage() {
                 ))}
               </div>
 
-              {/* Contact button */}
-              <button
-                onClick={() => window.location.href = `/booking/house/${house._id || id}`}
-                style={{
-                  width: '100%', padding: '14px', borderRadius: 14, border: 'none',
-                  background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                  color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(124,58,237,0.35)', marginBottom: 12
-                }}
-              >
-                {t('Réserver maintenant')}
-              </button>
+              {/* Nightly rentals are booked online; monthly / yearly ones are arranged through Meskan (card below) */}
+              {nightly ? (
+                <button
+                  onClick={() => window.location.href = `/booking/house/${house._id || id}`}
+                  style={{
+                    width: '100%', padding: '14px', borderRadius: 14, border: 'none',
+                    background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                    color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(124,58,237,0.35)', marginBottom: 12
+                  }}
+                >
+                  {t('Réserver maintenant')}
+                </button>
+              ) : (
+                <p style={{ fontSize: 13, color: '#475569', background: '#faf5ff', border: '1px solid #ede9fe', borderRadius: 12, padding: '10px 12px', margin: '0 0 12px' }}>
+                  {t('Location au mois ou à l’année : contactez Meskan pour visiter et louer ce bien.')}
+                </p>
+              )}
 
               {/* Questions go to Meskan, the intermediary: the owner's name and phone are never shown */}
               <MeskanContactCard contact={contact} about={`${house.name}${house.reference ? ` (${house.reference})` : ''}`} />

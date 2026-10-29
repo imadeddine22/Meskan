@@ -1761,5 +1761,21 @@
   "Bonjour": "مرحبًا",
   "Ce bien vous intéresse ?": "هل يهمك هذا العقار؟",
   "Vos coordonnées restent privées : seule l’administration de Meskan les voit. Les acheteurs contactent Meskan, qui vous met en relation.": "معلوماتك تبقى خاصة: لا تراها إلا إدارة مسكن. المشترون يتواصلون مع مسكن، وهي التي تربطك بهم.",
-  "Affichées sur toutes les annonces (locations, ventes, projets) à la place des coordonnées des propriétaires, vendeurs et investisseurs, qui restent privées.": "تظهر في كل الإعلانات (الكراء، البيع، المشاريع) بدل معلومات الملاك والبائعين والمستثمرين، التي تبقى خاصة."
+  "Affichées sur toutes les annonces (locations, ventes, projets) à la place des coordonnées des propriétaires, vendeurs et investisseurs, qui restent privées.": "تظهر في كل الإعلانات (الكراء، البيع، المشاريع) بدل معلومات الملاك والبائعين والمستثمرين، التي تبقى خاصة.",
+  "Location journalière": "كراء يومي",
+  "Location mensuelle": "كراء شهري",
+  "Location annuelle": "كراء سنوي",
+  "Mensuelle et annuelle": "شهري وسنوي",
+  "Mois et année": "شهري وسنوي",
+  "Toutes les locations": "كل أنواع الكراء",
+  "Type de location": "نوع الكراء",
+  "/ mois": "/ شهر",
+  "/ an": "/ سنة",
+  "Prix/mois": "السعر/شهر",
+  "Prix/an": "السعر/سنة",
+  "ex: 45000": "مثال: 45000",
+  "ex: 480000": "مثال: 480000",
+  "Location au mois ou à l’année : contactez Meskan pour visiter et louer ce bien.": "كراء شهري أو سنوي: تواصل مع مسكن لزيارة هذا العقار وكرائه.",
+  "Journalier": "يومي",
+  "{n} salles de bain": "{n} حمامات"
 }

@@ -177,6 +177,10 @@ export const createHouseBooking = async (req, res, next) => {
     if (house.status !== 'approved') {
       return res.status(400).json({ success: false, message: 'House is not available for booking' });
     }
+    // monthly / yearly rentals are arranged through Meskan, not booked night by night
+    if (house.rentalPeriod && house.rentalPeriod !== 'daily') {
+      return res.status(400).json({ success: false, message: 'This house is rented by the month or the year: contact Meskan to rent it' });
+    }
 
     const start = new Date(checkIn);
     const end = new Date(checkOut);

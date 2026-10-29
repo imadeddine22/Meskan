@@ -1756,5 +1756,21 @@
   "Bonjour": "Hello",
   "Ce bien vous intéresse ?": "Interested in this property?",
   "Vos coordonnées restent privées : seule l’administration de Meskan les voit. Les acheteurs contactent Meskan, qui vous met en relation.": "Your contact details stay private: only the Meskan administration sees them. Buyers contact Meskan, which puts you in touch.",
-  "Affichées sur toutes les annonces (locations, ventes, projets) à la place des coordonnées des propriétaires, vendeurs et investisseurs, qui restent privées.": "Shown on every listing (rentals, sales, projects) instead of the owners’, sellers’ and investors’ contacts, which stay private."
+  "Affichées sur toutes les annonces (locations, ventes, projets) à la place des coordonnées des propriétaires, vendeurs et investisseurs, qui restent privées.": "Shown on every listing (rentals, sales, projects) instead of the owners’, sellers’ and investors’ contacts, which stay private.",
+  "Location journalière": "Daily rental",
+  "Location mensuelle": "Monthly rental",
+  "Location annuelle": "Yearly rental",
+  "Mensuelle et annuelle": "Monthly and yearly",
+  "Mois et année": "Month & year",
+  "Toutes les locations": "All rentals",
+  "Type de location": "Rental type",
+  "/ mois": "/ month",
+  "/ an": "/ year",
+  "Prix/mois": "Price/month",
+  "Prix/an": "Price/year",
+  "ex: 45000": "e.g. 45000",
+  "ex: 480000": "e.g. 480000",
+  "Location au mois ou à l’année : contactez Meskan pour visiter et louer ce bien.": "Rented by the month or the year: contact Meskan to visit and rent this property.",
+  "Journalier": "Daily",
+  "{n} salles de bain": "{n} bathrooms"
 }

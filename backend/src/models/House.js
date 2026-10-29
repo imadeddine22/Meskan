@@ -5,6 +5,19 @@ import { countryPlugin } from '../utils/countryPlugin.js';
 import { policiesPlugin } from '../utils/policies.js';
 import { reelPlugin } from '../utils/reelPlugin.js';
 
+export const RENTAL_PERIODS = ['daily', 'monthly', 'yearly', 'monthly_yearly'];
+const isDaily = function () {
+  return !this.rentalPeriod || this.rentalPeriod === 'daily';
+};
+/** Filter for the houses rented by `period`: a "monthly and yearly" house shows under month and under year. */
+export const periodFilter = (period) => {
+  if (period === 'daily') return { rentalPeriod: { $nin: ['monthly', 'yearly', 'monthly_yearly'] } }; // older houses have no period: nightly
+  if (period === 'monthly') return { rentalPeriod: { $in: ['monthly', 'monthly_yearly'] } };
+  if (period === 'yearly') return { rentalPeriod: { $in: ['yearly', 'monthly_yearly'] } };
+  if (period === 'monthly_yearly') return { rentalPeriod: 'monthly_yearly' };
+  return null;
+};
+
 const houseSchema = new mongoose.Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
@@ -40,7 +53,11 @@ const houseSchema = new mongoose.Schema(
     rooms: { type: Number, default: 1, min: 1 },
     bathrooms: { type: Number, default: 1, min: 1 },
     capacity: { type: Number, default: 2, min: 1 },
-    pricePerNight: { type: Number, required: [true, 'Price per night is required'], min: 0 },
+    // How the house is rented: by the night (bookable online), by the month, by the year, or both month and year
+    rentalPeriod: { type: String, enum: RENTAL_PERIODS, default: 'daily', index: true },
+    pricePerNight: { type: Number, required: [isDaily, 'Price per night is required'], min: 0, default: 0 },
+    pricePerMonth: { type: Number, min: 0, default: 0 }, // 'monthly' / 'monthly_yearly'
+    pricePerYear: { type: Number, min: 0, default: 0 }, // 'yearly' / 'monthly_yearly'
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],

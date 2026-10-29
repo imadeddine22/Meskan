@@ -4,7 +4,7 @@ import { parsePolicies } from '../utils/policies.js';
 import User from '../models/User.js';
 import Hotel from '../models/Hotel.js';
 import Room from '../models/Room.js';
-import House from '../models/House.js';
+import House, { periodFilter } from '../models/House.js';
 import HouseForSale from '../models/HouseForSale.js';
 import Booking from '../models/Booking.js';
 import Review from '../models/Review.js';
@@ -318,6 +318,7 @@ export const createHotelByAdmin = async (req, res, next) => {
       ...req.body,
       policies: parsePolicies(req.body.policies),
       amenities: parseArray(req.body.amenities),
+      suitableFor: parseArray(req.body.suitableFor), // "" (none chosen) must not reach the enum
       ...(coordinates && { coordinates }),
       owner: req.body.owner || req.user._id,
       images,
@@ -367,6 +368,7 @@ export const getAllHouses = async (req, res, next) => {
     const filter = {};
     if (status) filter.status = status;
     if (type) filter.type = type;
+    Object.assign(filter, periodFilter(req.query.period));
     if (q) filter.name = new RegExp(q, 'i');
 
     const { limit, skip } = paging(req.query, { def: 20, max: 100 });
@@ -402,6 +404,7 @@ export const createHouseByAdmin = async (req, res, next) => {
       policies: parsePolicies(req.body.policies),
       ...parseDiscount(req.body),
       amenities: parseArray(req.body.amenities),
+      suitableFor: parseArray(req.body.suitableFor), // "" (none chosen) must not reach the enum
       ...(coordinates && { coordinates }),
       owner: req.body.owner || req.user._id,
       images,
@@ -420,11 +423,12 @@ export const updateHouseByAdmin = async (req, res, next) => {
     const house = await House.findById(req.params.id);
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
 
-    const fields = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'rooms', 'bathrooms', 'capacity', 'pricePerNight', 'status'];
+    const fields = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'rooms', 'bathrooms', 'capacity', 'rentalPeriod', 'pricePerNight', 'pricePerMonth', 'pricePerYear', 'status'];
     fields.forEach((f) => {
       if (req.body[f] !== undefined) house[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) house.amenities = parseArray(req.body.amenities);
+    if (req.body.suitableFor !== undefined) house.suitableFor = parseArray(req.body.suitableFor);
     const housePolicies = parsePolicies(req.body.policies, house.policies);
     if (housePolicies) house.policies = housePolicies;
     Object.assign(house, parseDiscount(req.body));
