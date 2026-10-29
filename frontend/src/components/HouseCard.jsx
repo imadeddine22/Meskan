@@ -27,7 +27,7 @@ export default function HouseCard({ house, list = false }) {
 
   return (
     <div
-      className={`group overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1 relative ${list ? 'flex' : ''}`}
+      className={`group isolate overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1 relative ${list ? 'flex' : ''}`}
     >
       <Link
         href={`/houses/${house._id || house.id}`}

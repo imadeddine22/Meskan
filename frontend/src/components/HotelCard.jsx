@@ -20,7 +20,7 @@ export default function HotelCard({ hotel, list = false, onHover }) {
       <div
         onMouseEnter={() => onHover && onHover(hotel.id || hotel._id)}
         onMouseLeave={() => onHover && onHover(null)}
-        className="group flex flex-col md:flex-row overflow-hidden rounded-xl bg-white shadow-sm border border-brand-100 transition hover:shadow-md md:h-[240px] relative"
+        className="group isolate flex flex-col md:flex-row overflow-hidden rounded-xl bg-white shadow-sm border border-brand-100 transition hover:shadow-md md:h-[240px] relative"
       >
         <Link
           href={`/hotels/${hotel.id || hotel._id}`}
@@ -92,7 +92,7 @@ export default function HotelCard({ hotel, list = false, onHover }) {
   // Grid view (original)
   return (
     <div
-      className="group overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1 relative"
+      className="group isolate overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1 relative"
     >
       <Link href={`/hotels/${hotel.id || hotel._id}`} className="block">
         <div className="relative h-52 w-full">
