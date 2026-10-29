@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { MapPin, BedDouble, Bath, Users, Wifi, Home, Star, Phone, Mail } from 'lucide-react';
+import MeskanContactCard from '@/components/MeskanContactCard';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
@@ -24,7 +25,7 @@ const MOCK = {
   amenities: ['Wi-Fi', 'Piscine', 'Climatisation', 'Parking', 'Jardin', 'BBQ', 'Cuisine équipée'],
   images: [{ url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80' }],
   avgRating: 4.7, reviewsCount: 32,
-  owner: { fullName: 'Ahmed Proprietaire', email: 'contact@villa.dz', phone: '+213 555 123 456' }
+
 };
 
 export default function HouseDetailPage() {
@@ -36,6 +37,7 @@ export default function HouseDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const [mock, setMock] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const [contact, setContact] = useState(initial?.contact || {}); // Meskan's phone (the intermediary)
 
   useEffect(() => {
     (async () => {
@@ -43,6 +45,7 @@ export default function HouseDetailPage() {
         const { data } = await api.get(`/houses/${id}`);
         api.get(`/houses/${id}/reviews`).then((r) => setReviews(r.data.reviews || [])).catch(() => {});
         setHouse(data.house);
+        setContact(data.contact || {});
       } catch {
         if (!initial?.house) {
           setHouse({ ...MOCK, _id: id });
@@ -281,40 +284,9 @@ export default function HouseDetailPage() {
                 {t('Réserver maintenant')}
               </button>
 
-              {/* Calls the owner; hidden when no number was given (it used to show a fake "+213 XXX XXX XXX") */}
-              {house.owner?.phone && (
-                <a
-                  href={`tel:${String(house.owner.phone).replace(/[^\d+]/g, '')}`}
-                  style={{
-                    width: '100%', padding: '12px', borderRadius: 14,
-                    border: '1px solid #ede9fe', background: '#faf5ff',
-                    color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none'
-                  }}
-                >
-                  <Phone size={16} aria-hidden="true" /> {t('Contacter le propriétaire')} · <span dir="ltr">{house.owner.phone}</span>
-                </a>
-              )}
+              {/* Questions go to Meskan, the intermediary: the owner's name and phone are never shown */}
+              <MeskanContactCard contact={contact} about={`${house.name}${house.reference ? ` (${house.reference})` : ''}`} />
 
-              {/* Owner info */}
-              {house.owner && (
-                <div style={{
-                  marginTop: 20, paddingTop: 20, borderTop: '1px solid #f1f5f9'
-                }}>
-                  <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 1 }}>{t('Propriétaire')}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Avatar user={{ ...house.owner, fullName: house.owner.fullName || t('Propriétaire') }} className="h-10 w-10 rounded-full text-base" initialClassName="bg-gradient-to-br from-violet-600 to-purple-500 text-white" />
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', margin: 0 }}>{house.owner.fullName}</p>
-                      {house.owner.email && (
-                        <p style={{ fontSize: 12, color: '#94a3b8', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Mail size={11} /> {house.owner.email}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </aside>

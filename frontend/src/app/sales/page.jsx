@@ -61,6 +61,7 @@ export default function SalesPage() {
   const initial = useInitialData();
   const { wilayas } = useWilayas();
   const [listings, setListings] = useState(initial?.listings ?? []);
+  const [contact, setContact] = useState(initial?.contact || {}); // Meskan's phone: buyers call Meskan, never the seller
   const [loading, setLoading] = useState(!initial?.listings);
   const [total, setTotal] = useState(initial?.total ?? 0);
   const [page, setPage] = useState(1);
@@ -103,6 +104,7 @@ export default function SalesPage() {
         const { data } = await api.get('/sales', { params });
         if (id !== lastRequest.current) return; // an older request answering late
         setListings(data.listings || []);
+        setContact(data.contact || {});
         setTotal(data.total || 0);
         setPages(data.pages || 1);
       } catch (err) {
@@ -266,7 +268,7 @@ export default function SalesPage() {
             <div className={view === 'map' ? 'grid gap-6 lg:grid-cols-[1fr_1.1fr]' : ''}>
               <div className={view === 'map' ? 'grid gap-5 sm:grid-cols-2 lg:max-h-[75vh] lg:overflow-y-auto lg:pe-2' : 'grid gap-6 md:grid-cols-2 lg:grid-cols-3'}>
                 {listings.map((l) => (
-                  <SaleCard key={l._id} listing={l} t={t} active={activeId === l._id} onHover={setActiveId} />
+                  <SaleCard key={l._id} listing={l} contact={contact} t={t} active={activeId === l._id} onHover={setActiveId} />
                 ))}
               </div>
               {view === 'map' && (
@@ -305,12 +307,14 @@ export default function SalesPage() {
   );
 }
 
-function SaleCard({ listing: l, t, active, onHover }) {
+function SaleCard({ listing: l, contact, t, active, onHover }) {
   const isNew = l.createdAt && Date.now() - new Date(l.createdAt) < NEW_DAYS * 86400000;
   const perM2 = l.area > 0 ? Math.round(l.price / l.area) : 0;
-  const wa = whatsappNumber(l.contactPhone);
+  // Meskan is the intermediary: the buttons call Meskan, the seller's number stays private
+  const phone = contact?.phone || '';
+  const wa = whatsappNumber(phone);
   const monthly = estimateMonthly(l.price);
-  const waText = encodeURIComponent(`${t('Bonjour, votre annonce m’intéresse')} : ${l.title} (${l.reference || ''})`);
+  const waText = encodeURIComponent(`${t('Bonjour, je vous contacte au sujet de :')} ${l.title} (${l.reference || ''})`);
 
   return (
     <article
@@ -355,10 +359,10 @@ function SaleCard({ listing: l, t, active, onHover }) {
           </Link>
         )}
 
-        {(l.contactPhone || wa) && (
+        {(phone || wa) && (
           <div className="mt-auto grid grid-cols-2 gap-2 border-t border-gray-100 pt-4">
-            {l.contactPhone && (
-              <a href={`tel:${l.contactPhone}`} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-emerald-400 hover:text-emerald-700">
+            {phone && (
+              <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-emerald-400 hover:text-emerald-700">
                 <Phone className="h-4 w-4" aria-hidden="true" /> {t('Appeler')}
               </a>
             )}

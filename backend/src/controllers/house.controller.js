@@ -1,3 +1,4 @@
+import { meskanContact } from '../utils/meskanContact.js';
 import { parseDiscount } from '../utils/pricing.js';
 import { paging, num } from '../utils/query.js';
 import { parsePolicies } from '../utils/policies.js';
@@ -64,10 +65,11 @@ export const getHouses = async (req, res, next) => {
 // GET /houses/:id — public details
 export const getHouse = async (req, res, next) => {
   try {
-    const house = await House.findById(req.params.id).populate('owner', 'fullName email phone avatar');
+    // no owner name or contact: Meskan is the intermediary between guests and owners (its contact comes along)
+    const house = await House.findById(req.params.id);
     // Pending/rejected houses are only visible to their owner and admins
     if (!house || !canView(req, house)) return res.status(404).json({ success: false, message: 'House not found' });
-    res.json({ success: true, house });
+    res.json({ success: true, house, contact: await meskanContact() });
   } catch (err) {
     next(err);
   }

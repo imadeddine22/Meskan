@@ -372,7 +372,7 @@ export const getAllHouses = async (req, res, next) => {
     const { limit, skip } = paging(req.query, { def: 20, max: 100 });
     const [housesData, total] = await Promise.all([
       House.find(filter)
-        .populate('owner', 'fullName email')
+        .populate('owner', 'fullName email phone')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -499,7 +499,8 @@ export const getAllSales = async (req, res, next) => {
     const { limit, skip } = paging(req.query, { def: 20, max: 100 });
     const [salesData, total] = await Promise.all([
       HouseForSale.find(filter)
-        .populate('seller', 'fullName email')
+        .select('+contactPhone +contactEmail')
+        .populate('seller', 'fullName email phone')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),

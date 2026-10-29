@@ -16,7 +16,7 @@ import Booking from './models/Booking.js';
 import Review from './models/Review.js';
 import Message from './models/Message.js';
 import Testimonial from './models/Testimonial.js';
-import Conversation from './models/Conversation.js';
+import SupportThread from './models/SupportThread.js';
 import HouseForSale from './models/HouseForSale.js';
 import InvestmentProject from './models/InvestmentProject.js';
 import InvestorInterest from './models/InvestorInterest.js';
@@ -70,7 +70,7 @@ export const seedDatabase = async () => {
   // Wipe
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
-    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}), HouseForSale.deleteMany({}),
+    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), SupportThread.deleteMany({}), HouseForSale.deleteMany({}),
     InvestmentProject.deleteMany({}), InvestorInterest.deleteMany({}), Referral.deleteMany({}),
   ]);
 
@@ -333,19 +333,18 @@ export const seedDatabase = async () => {
   }
   console.log(`⭐ Reviews: ${paidStays.length}`);
 
-  // --- A demo guest ↔ owner conversation on one of Sara's bookings ---
+  // --- A demo conversation between Sara and Meskan (users only write to Meskan, the intermediary) ---
   const saraBooking = await Booking.findOne({ customer: customers[0]._id, hotel: { $exists: true }, status: { $ne: 'cancelled' } }).populate('hotel', 'name');
   if (saraBooking) {
-    await Conversation.create({
-      booking: saraBooking._id, customer: customers[0]._id, owner: owner._id,
-      propertyType: 'hotel', propertyName: saraBooking.hotel?.name || '',
+    await SupportThread.create({
+      user: customers[0]._id,
       messages: [
-        { sender: customers[0]._id, text: 'Bonjour, est-il possible d’arriver vers 22 h ?', readAt: new Date() },
-        { sender: owner._id, text: 'Bonjour Sara, oui sans problème, la réception est ouverte 24 h/24.' },
+        { sender: customers[0]._id, text: 'Bonjour, est-il possible d’arriver vers 22 h ?', about: `Réservation — ${saraBooking.hotel?.name || ''}`, readAt: new Date() },
+        { sender: admin._id, fromAdmin: true, text: 'Bonjour Sara, nous avons vérifié avec l’hôtel : oui sans problème, la réception est ouverte 24 h/24.' },
       ],
       lastMessageAt: new Date(),
     });
-    console.log('💬 Conversations: 1 (sara ↔ hôtelier)');
+    console.log('💬 Conversations avec Meskan : 1 (sara)');
   }
 
   // --- Deals: discounts set by owners ---

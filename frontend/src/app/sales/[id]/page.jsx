@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from '@/components/LocaleLink';
 import { MapPin, Phone, Mail, ArrowLeft, Eye, Home, Ruler, DoorOpen, Bath, Tag, ChevronLeft, ChevronRight, User, MessageCircle, Calculator } from 'lucide-react';
+import MeskanContactCard from '@/components/MeskanContactCard';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api, { getImageUrl } from '@/lib/api';
@@ -29,12 +30,14 @@ export default function SaleDetailPage() {
   const [listing, setListing] = useState(initial?.listing ?? null);
   const [loading, setLoading] = useState(!initial?.listing);
   const [imgIdx, setImgIdx] = useState(0);
+  const [contact, setContact] = useState(initial?.contact || {}); // Meskan's phone (the intermediary)
 
   useEffect(() => {
     const fetch = async () => {
       try {
         const { data } = await api.get(`/sales/${id}`);
         setListing(data.listing);
+        setContact(data.contact || {});
       } catch {
         if (!initial?.listing) router.push('/sales');
       } finally {
@@ -56,7 +59,7 @@ export default function SaleDetailPage() {
   if (!listing) return null;
 
   const images = listing.images || [];
-  const seller = listing.seller || {};
+
 
   return (
     <>
@@ -217,49 +220,10 @@ export default function SaleDetailPage() {
             <div className="space-y-6">
               <ListingReel kind="sale" listing={listing} />
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sticky top-24">
-                <h3 className="font-bold text-gray-900 mb-4">{t('Contacter le vendeur')}</h3>
-                
-                {/* Seller Info */}
-                <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50">
-                  <Avatar user={{ ...seller, fullName: seller.fullName || t('Vendeur') }} className="h-12 w-12 rounded-full" initialClassName="bg-gradient-to-tr from-emerald-500 to-teal-500 text-white" />
-                  <div>
-                    <p className="font-bold text-gray-900">{seller.fullName || t('Vendeur')}</p>
-                    <p className="text-xs text-gray-400">{t('Vendeur vérifié')}</p>
-                  </div>
-                </div>
+                <h3 className="font-bold text-gray-900 mb-4">{t('Ce bien vous intéresse ?')}</h3>
 
-                {/* Contact buttons */}
-                {(listing.contactPhone || seller.phone) && (
-                  <a
-                    href={`tel:${listing.contactPhone || seller.phone}`}
-                    className="flex items-center gap-3 w-full rounded-xl bg-emerald-600 px-5 py-3.5 font-bold text-white shadow-md hover:bg-emerald-700 transition mb-3"
-                  >
-                    <Phone className="h-5 w-5" />
-                    <span>{listing.contactPhone || seller.phone}</span>
-                  </a>
-                )}
-
-                {(listing.contactPhone || seller.phone) && (
-                  <a
-                    href={`https://wa.me/${waNumber(listing.contactPhone || seller.phone)}?text=${encodeURIComponent(`${t('Bonjour, votre annonce m’intéresse')} : ${listing.title} (${listing.reference || ''})`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 w-full rounded-xl bg-[#25D366] px-5 py-3.5 font-bold text-white shadow-md hover:bg-[#1fb857] transition mb-3"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    <span>WhatsApp</span>
-                  </a>
-                )}
-
-                {(listing.contactEmail || seller.email) && (
-                  <a
-                    href={`mailto:${listing.contactEmail || seller.email}`}
-                    className="flex items-center gap-3 w-full rounded-xl border border-gray-200 px-5 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition"
-                  >
-                    <Mail className="h-5 w-5 text-emerald-500" />
-                    <span className="truncate">{listing.contactEmail || seller.email}</span>
-                  </a>
-                )}
+                {/* Buyers contact Meskan, the intermediary: the seller's name and phone are never shown */}
+                <MeskanContactCard contact={contact} about={`${listing.title}${listing.reference ? ` (${listing.reference})` : ''}`} className="border-0 p-0" />
 
                 <Link
                   href={`/outils/simulateur-credit-immobilier?price=${listing.price}`}

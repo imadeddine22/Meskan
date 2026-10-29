@@ -1,3 +1,4 @@
+import { meskanContact } from '../utils/meskanContact.js';
 import { isCountry } from '../utils/countries.js';
 import { paging, num } from '../utils/query.js';
 import HouseForSale from '../models/HouseForSale.js';
@@ -104,6 +105,7 @@ export const getListings = async (req, res, next) => {
       page: pageNum,
       pages: Math.ceil(total / lim),
       listings,
+      contact: await meskanContact(), // buyers call Meskan, never the seller
     });
   } catch (err) {
     next(err);
@@ -113,7 +115,8 @@ export const getListings = async (req, res, next) => {
 // GET /sales/:id — public details (increments view count)
 export const getListing = async (req, res, next) => {
   try {
-    const listing = await HouseForSale.findById(req.params.id).populate('seller', 'fullName email phone avatar');
+    // no seller name or contact: Meskan is the intermediary between buyers and sellers (its contact comes along)
+    const listing = await HouseForSale.findById(req.params.id);
     // Pending/rejected listings are only visible to their seller and admins
     if (!listing || !canView(req, listing, 'seller')) {
       return res.status(404).json({ success: false, message: 'Listing not found' });
@@ -124,7 +127,7 @@ export const getListing = async (req, res, next) => {
       listing.views += 1;
     }
 
-    res.json({ success: true, listing });
+    res.json({ success: true, listing, contact: await meskanContact() });
   } catch (err) {
     next(err);
   }
