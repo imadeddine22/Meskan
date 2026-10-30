@@ -1,34 +1,33 @@
 'use client';
 
-import { ArrowUpRight, Home, KeyRound, Hotel, Building2, Landmark } from 'lucide-react';
+import { ArrowUpRight, KeyRound, Hotel, Building2, Landmark } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import { useT } from '@/lib/i18n/useT';
 
-// Brand colours: navy, cloud white, turquoise — alternated like a palette board
+// Brand colours (no white card): navy, turquoise, deep ink, ocean — alternated like a palette board
 const THEMES = {
   navy: { bg: '#152A41', fg: '#ffffff', sub: 'rgba(255,255,255,0.72)', chip: 'rgba(255,255,255,0.35)', icon: '#0DD5C4' },
-  cloud: { bg: '#F2F6FA', fg: '#152A41', sub: '#475569', chip: 'rgba(21,42,65,0.25)', icon: '#00B3D2' },
   teal: { bg: 'linear-gradient(150deg, #0DD5C4, #00B3D2)', fg: '#ffffff', sub: 'rgba(255,255,255,0.88)', chip: 'rgba(255,255,255,0.5)', icon: '#ffffff' },
   ink: { bg: '#0B1622', fg: '#ffffff', sub: 'rgba(255,255,255,0.7)', chip: 'rgba(255,255,255,0.3)', icon: '#0DD5C4' },
+  ocean: { bg: 'linear-gradient(150deg, #0b4a5c, #00B3D2)', fg: '#ffffff', sub: 'rgba(255,255,255,0.85)', chip: 'rgba(255,255,255,0.45)', icon: '#ffffff' },
 };
 
 // Everything Meskan offers, each card opens its page
 const CARDS = [
-  { href: '/sales?category=homes', chip: 'Vente', title: 'Maisons à vendre', text: 'Appartements, villas et maisons à acheter partout en Algérie.', icon: Home, theme: 'navy', offset: 'lg:mt-0' },
-  { href: '/houses', chip: 'Location', title: 'Maisons à louer', text: 'À la journée, au mois ou à l’année : villas, appartements, chalets…', icon: KeyRound, theme: 'cloud', offset: 'lg:mt-24' },
-  { href: '/hotels', chip: 'Hôtels', title: 'Réservation d’hôtels', text: 'Réservez votre chambre dans les 69 wilayas, paiement sur place.', icon: Hotel, theme: 'teal', offset: 'lg:mt-10' },
-  { href: '/sales?category=land', chip: 'Immobilier', title: 'Biens immobiliers à vendre', text: 'Terrains, locaux commerciaux, immeubles et fermes.', icon: Building2, theme: 'ink', offset: 'lg:mt-32' },
-  { href: '/investir', chip: 'Investissement', title: 'Investissement', text: 'Projets et investisseurs mis en relation par Meskan, jusqu’à la signature.', icon: Landmark, theme: 'cloud', offset: 'lg:mt-16' },
+  { href: '/houses', chip: 'Location', title: 'Maisons à louer', text: 'À la journée, au mois ou à l’année : villas, appartements, chalets…', icon: KeyRound, theme: 'navy', offset: 'lg:mt-0' },
+  { href: '/hotels', chip: 'Hôtels', title: 'Réservation d’hôtels', text: 'Réservez votre chambre dans les 69 wilayas, paiement sur place.', icon: Hotel, theme: 'teal', offset: 'lg:mt-24' },
+  { href: '/sales', chip: 'Immobilier', title: 'Biens immobiliers à vendre', text: 'Appartements, villas, maisons, terrains et locaux commerciaux à acheter.', icon: Building2, theme: 'ink', offset: 'lg:mt-10' },
+  { href: '/investir', chip: 'Investissement', title: 'Investissement', text: 'Projets et investisseurs mis en relation par Meskan, jusqu’à la signature.', icon: Landmark, theme: 'ocean', offset: 'lg:mt-32' },
 ];
 
-/** Right under the home hero: the five things visitors can do on Meskan, each linking to its page. */
+/** Right under the home hero: what visitors can do on Meskan, each card linking to its page. */
 export default function CategoryCards() {
   const { t } = useT();
   return (
     <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6" aria-labelledby="categories-title">
       <h2 id="categories-title" className="mb-5 text-2xl font-black text-ink md:text-3xl">{t('Tout ce que vous trouverez sur Meskan')}</h2>
-      {/* phone: swipe sideways; computer: five staggered cards */}
-      <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 lg:mx-0 lg:grid lg:grid-cols-5 lg:items-start lg:overflow-visible lg:px-0">
+      {/* phone: swipe sideways; computer: four staggered cards */}
+      <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 lg:mx-0 lg:grid lg:grid-cols-4 lg:items-start lg:overflow-visible lg:px-0">
         {CARDS.map(({ href, chip, title, text, icon: Icon, theme, offset }) => {
           const c = THEMES[theme];
           return (
