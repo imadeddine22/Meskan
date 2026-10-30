@@ -5,6 +5,12 @@ import HouseForSale from '../models/HouseForSale.js';
 import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
 
+// Two groups of property types: homes (to live in) and other real estate (land, shops, buildings, farms)
+const SALE_CATEGORIES = {
+  homes: ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Chalet'],
+  land: ['Terrain', 'Local commercial', 'Immeuble', 'Ferme'],
+};
+
 // GET /sales — public list of APPROVED sale listings with filters
 export const getListings = async (req, res, next) => {
   try {
@@ -17,6 +23,8 @@ export const getListings = async (req, res, next) => {
     if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type && type !== 'Tous') filter.type = type;
+    // ?category=homes (houses, flats…) | land (land, shops, buildings, farms) — the home page cards
+    else if (SALE_CATEGORIES[req.query.category]) filter.type = { $in: SALE_CATEGORIES[req.query.category] };
     // Rooms like Algerian "F" sizes: rooms=3 → exactly 3 (F3), rooms=5+ → 5 or more
     if (req.query.rooms) {
       const r = String(req.query.rooms);

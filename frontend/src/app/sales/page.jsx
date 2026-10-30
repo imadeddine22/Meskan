@@ -42,7 +42,13 @@ const SORTS = [
   { value: 'price_desc', label: 'Prix décroissant' },
 ];
 
-const EMPTY = { type: '', wilaya: '', rooms: '', price: '', minArea: '', maxArea: '', reference: '' };
+const EMPTY = { category: '', type: '', wilaya: '', rooms: '', price: '', minArea: '', maxArea: '', reference: '' };
+// Groups of property types (same as SALE_CATEGORIES on the backend): homes, and land / shops / buildings / farms
+const CATEGORIES = [
+  { key: '', label: 'Tous les biens' },
+  { key: 'homes', label: 'Maisons et appartements' },
+  { key: 'land', label: 'Terrains, locaux et immeubles' },
+];
 const NEW_DAYS = 7;
 
 /** "0552 22 22 22" → "213552222222" for wa.me links */
@@ -78,8 +84,9 @@ export default function SalesPage() {
     const q = new URLSearchParams(window.location.search);
     const w = q.get('wilaya');
     const type = PROPERTY_TYPES.includes(q.get('type')) ? q.get('type') : '';
-    if (w || type) {
-      const preset = { ...(w && { wilaya: w }), ...(type && { type }) };
+    const category = CATEGORIES.some((c) => c.key && c.key === q.get('category')) ? q.get('category') : '';
+    if (w || type || category) {
+      const preset = { ...(w && { wilaya: w }), ...(type && { type }), ...(category && { category }) };
       setForm((f) => ({ ...f, ...preset }));
       setFilters((f) => ({ ...f, ...preset }));
     }
@@ -95,6 +102,7 @@ export default function SalesPage() {
       try {
         const params = { page, limit: 12, sort };
         if (filters.type) params.type = filters.type;
+        else if (filters.category) params.category = filters.category;
         if (filters.wilaya) params.wilaya = filters.wilaya;
         if (filters.rooms) params.rooms = filters.rooms;
         if (filters.price) params.priceRanges = filters.price;
@@ -148,10 +156,29 @@ export default function SalesPage() {
           <div className="relative z-10 mx-auto max-w-6xl">
             <h1 className="text-3xl font-black leading-tight text-white md:text-5xl">{t('Maisons et appartements à vendre en Algérie')}</h1>
             <p className="mt-3 max-w-2xl text-sm text-white/80 md:text-base">
-              {t('Annonces vérifiées, prix au m² et contact direct avec le vendeur, sans intermédiaire.')}
+              {t('Annonces vérifiées et prix au m². Meskan vous met en relation avec le vendeur et vous accompagne jusqu’à l’achat.')}
             </p>
 
-            <form onSubmit={apply} className="mt-8 rounded-2xl bg-white p-3 shadow-2xl md:p-4" role="search" aria-label={t('Rechercher un bien')}>
+            {/* Homes, or other real estate (land, shops, buildings, farms) */}
+            <div role="tablist" aria-label={t('Catégorie')} className="mt-6 inline-flex flex-wrap gap-1 rounded-2xl bg-white/15 p-1 backdrop-blur">
+              {CATEGORIES.map((c) => {
+                const on = filters.category === c.key && !filters.type;
+                return (
+                  <button
+                    key={c.key || 'all'}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    onClick={() => { setForm((f) => ({ ...f, category: c.key, type: '' })); setFilters((f) => ({ ...f, category: c.key, type: '' })); setPage(1); }}
+                    className={`rounded-xl px-4 py-2 text-sm font-bold transition ${on ? 'bg-white text-slate-900 shadow' : 'text-white hover:bg-white/10'}`}
+                  >
+                    {t(c.label)}
+                  </button>
+                );
+              })}
+            </div>
+
+            <form onSubmit={apply} className="mt-4 rounded-2xl bg-white p-3 shadow-2xl md:p-4" role="search" aria-label={t('Rechercher un bien')}>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
                 <label className="sr-only" htmlFor="f-type">{t('Type de bien')}</label>
                 <select id="f-type" value={form.type} onChange={(e) => set('type', e.target.value)} className={field}>

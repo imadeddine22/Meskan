@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
+import CategoryCards from '@/components/CategoryCards';
 import FeaturedHotels from '@/components/FeaturedHotels';
 import ReelsTeaser from '@/components/ReelsTeaser';
 import FeaturedHouses from '@/components/FeaturedHouses';
@@ -51,6 +52,8 @@ export default function HomePage() {
         </>
       ) : (
         <>
+          {/* right under the hero: hotels, rentals, sales, real estate, investment */}
+          <CategoryCards />
           <FeaturedHotels />
           <ReelsTeaser />
           <CitiesSection selectedCity={place} onSelectCity={setPlace} />
