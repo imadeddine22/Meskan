@@ -239,6 +239,7 @@ function KindChooser({ onPick, onClose }) {
           <div>
             <h2 id="kind-title" className="text-xl font-black" style={{ color: PROJECT_COLORS.ink }}>{t('Quel investisseur êtes-vous ?')}</h2>
             <p className="text-xs text-slate-500">{t('Choisissez ce que vous apportez au projet.')}</p>
+            <p className="mt-1 text-xs font-semibold text-[#0b7f93]">{t('Meskan vous met en relation et s’occupe de toutes les démarches jusqu’à la signature. Vous payez 2 % de la valeur de la transaction, uniquement si elle aboutit.')}</p>
           </div>
           <button type="button" onClick={onClose} aria-label={t('Fermer')} className="grid h-9 w-9 place-items-center rounded-full hover:bg-slate-100">
             <X className="h-5 w-5" aria-hidden="true" />

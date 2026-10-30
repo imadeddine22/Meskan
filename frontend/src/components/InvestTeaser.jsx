@@ -45,7 +45,8 @@ export default function InvestTeaser() {
           </h2>
 
           <p className="mt-4 text-center text-sm text-slate-600 md:text-base lg:text-start">
-            {t('Terrains, locaux commerciaux et projets d’investissement prometteurs vous attendent.')}
+            {t('Terrains, locaux commerciaux et projets d’investissement prometteurs vous attendent.')}{' '}
+            {t('Meskan s’occupe de toutes les démarches jusqu’à la signature.')}
           </p>
 
           <span aria-hidden="true" className="mt-7 hidden h-1 w-20 self-start rounded-full lg:block" style={{ background: TEAL }} />
