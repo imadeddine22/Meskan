@@ -13,13 +13,14 @@ import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
 import { MULTI_COUNTRY } from '@/lib/countries';
 import DiscountFields from '@/components/DiscountFields';
+import { RENTAL_PERIODS, periodOf, rentPrices } from '@/lib/rentals';
 // Was referenced but never defined → the page crashed on render. Same list as the House model enum.
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 
 const emptyForm = {
   name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
-  pricePerNight: '', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES }, discountPercent: 0, discountUntil: '',
+  rentalPeriod: 'daily', pricePerNight: '', pricePerMonth: '', pricePerYear: '', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES }, discountPercent: 0, discountUntil: '',
   owner: '',
 };
 
@@ -31,6 +32,7 @@ export default function AdminAllHousesPage() {
   const [error, setError]           = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [periodFilter, setPeriodFilter] = useState(''); // daily | monthly | yearly | monthly_yearly
   const [search, setSearch]         = useState('');
   const [showModal, setShowModal]   = useState(false);
   const [form, setForm]             = useState(emptyForm);
@@ -54,7 +56,7 @@ export default function AdminAllHousesPage() {
       name: house.name, description: house.description || '', country: house.country || 'DZ', wilaya: house.wilaya,
       city: house.city, address: house.address || '', type: house.type, starRating: house.starRating || 3,
       rooms: house.rooms, bathrooms: house.bathrooms, capacity: house.capacity,
-      pricePerNight: house.pricePerNight, status: house.status,
+      rentalPeriod: periodOf(house), pricePerNight: house.pricePerNight || '', pricePerMonth: house.pricePerMonth || '', pricePerYear: house.pricePerYear || '', status: house.status,
       amenities: house.amenities?.join(', ') || '',
       suitableFor: house.suitableFor || [],
       policies: policiesOf(house),
@@ -74,6 +76,7 @@ export default function AdminAllHousesPage() {
       const params = {};
       if (statusFilter) params.status = statusFilter;
       if (typeFilter) params.type = typeFilter;
+      if (periodFilter) params.period = periodFilter;
       if (search) params.q = search;
       const { data } = await api.get('/admin/houses/all', { params });
       setHouses(data.houses);
@@ -84,7 +87,7 @@ export default function AdminAllHousesPage() {
     }
   };
 
-  useEffect(() => { load(); }, [statusFilter, typeFilter]);
+  useEffect(() => { load(); }, [statusFilter, typeFilter, periodFilter]);
 
   const handleSearch = (e) => { e.preventDefault(); load(); };
 
@@ -207,6 +210,10 @@ export default function AdminAllHousesPage() {
             </button>
           ))}
         </div>
+        <select value={periodFilter} onChange={(e) => setPeriodFilter(e.target.value)} aria-label={t('Type de location')} className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm text-gray-700">
+          <option value="">{t('Toutes les locations')}</option>
+          {RENTAL_PERIODS.map((p) => <option key={p.key} value={p.key}>{t(p.label)}</option>)}
+        </select>
         <div className="no-scrollbar flex items-center gap-2 overflow-x-auto" style={{ maxWidth: '100%' }}>
           <button
             onClick={() => setTypeFilter('')}
@@ -297,11 +304,12 @@ export default function AdminAllHousesPage() {
                     <Users style={{ width: 13, height: 13 }} /> {h.capacity} {t('pers.')}
                   </span>
                 </div>
-                {h.pricePerNight > 0 && (
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginTop: 6 }}>
-                    {h.pricePerNight.toLocaleString('fr-DZ')} {h.currency || 'DZD'}<span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 11 }}>{t('/nuit')}</span>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', marginTop: 6 }}>{t(RENTAL_PERIODS.find((p) => p.key === periodOf(h))?.label)}</p>
+                {rentPrices(h).filter((x) => x.amount > 0).map(({ amount, unit }) => (
+                  <p key={unit} style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginTop: 2 }}>
+                    {amount.toLocaleString('fr-DZ')} {h.currency || 'DZD'}<span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 11 }}> {t(unit)}</span>
                   </p>
-                )}
+                ))}
                 <div className="admin-hotel-card-footer">
                   <span style={{ fontSize: 12, color: '#94a3b8' }}>
                     {h.owner?.fullName || '—'}
@@ -493,11 +501,50 @@ export default function AdminAllHousesPage() {
                     onChange={(e) => setForm({ ...form, capacity: e.target.value })} />
                 </div>
 
-                <div>
-                  <label style={labelStyle}>{t('Prix/nuit')} ({currencyOf(form.country)}) *</label>
-                  <input type="number" min="0" required style={inputStyle} placeholder={t('ex: 5000')} value={form.pricePerNight}
-                    onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })} />
+                {/* How the house is rented: by the day (booked online), the month, the year, or month and year */}
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>{t('Type de location')} *</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {RENTAL_PERIODS.map((p) => (
+                      <button
+                        key={p.key}
+                        type="button"
+                        aria-pressed={form.rentalPeriod === p.key}
+                        onClick={() => setForm({ ...form, rentalPeriod: p.key })}
+                        style={{
+                          borderRadius: 999, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          background: form.rentalPeriod === p.key ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : '#fff',
+                          color: form.rentalPeriod === p.key ? '#fff' : '#475569',
+                          border: form.rentalPeriod === p.key ? 'none' : '1px solid #e2e8f0',
+                        }}
+                      >
+                        {t(p.label)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {form.rentalPeriod === 'daily' && (
+                  <div>
+                    <label style={labelStyle}>{t('Prix/nuit')} ({currencyOf(form.country)}) *</label>
+                    <input type="number" min="0" required style={inputStyle} placeholder={t('ex: 5000')} value={form.pricePerNight}
+                      onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })} />
+                  </div>
+                )}
+                {['monthly', 'monthly_yearly'].includes(form.rentalPeriod) && (
+                  <div>
+                    <label style={labelStyle}>{t('Prix/mois')} ({currencyOf(form.country)}) *</label>
+                    <input type="number" min="0" required style={inputStyle} placeholder={t('ex: 45000')} value={form.pricePerMonth}
+                      onChange={(e) => setForm({ ...form, pricePerMonth: e.target.value })} />
+                  </div>
+                )}
+                {['yearly', 'monthly_yearly'].includes(form.rentalPeriod) && (
+                  <div>
+                    <label style={labelStyle}>{t('Prix/an')} ({currencyOf(form.country)}) *</label>
+                    <input type="number" min="0" required style={inputStyle} placeholder={t('ex: 480000')} value={form.pricePerYear}
+                      onChange={(e) => setForm({ ...form, pricePerYear: e.target.value })} />
+                  </div>
+                )}
 
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={labelStyle}>{t('Description')}</label>
@@ -657,10 +704,12 @@ export default function AdminAllHousesPage() {
             {/* Key Specifications */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-2xl bg-gray-50 mb-6 text-sm">
               <div>
-                <p className="text-xs text-gray-400 font-bold uppercase">{t('Prix / Nuit')}</p>
-                <p className="text-lg font-extrabold text-purple-600">
-                  {viewingHouse.pricePerNight ? `${viewingHouse.pricePerNight.toLocaleString('fr-DZ')} ${viewingHouse.currency || 'DZD'}` : '—'}
-                </p>
+                <p className="text-xs text-gray-400 font-bold uppercase">{t(RENTAL_PERIODS.find((p) => p.key === periodOf(viewingHouse))?.label)}</p>
+                {rentPrices(viewingHouse).map(({ amount, unit }) => (
+                  <p key={unit} className="text-lg font-extrabold text-purple-600">
+                    {amount ? `${amount.toLocaleString('fr-DZ')} ${viewingHouse.currency || 'DZD'}` : '—'} <span className="text-xs font-semibold text-gray-400">{t(unit)}</span>
+                  </p>
+                ))}
               </div>
               <div>
                 <p className="text-xs text-gray-400 font-bold uppercase">{t('Chambres / SDB')}</p>

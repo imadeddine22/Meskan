@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, X, Banknote, Phone, MessageCircle } from 'lucide-react';
+import { Check, X, Banknote, MessageCircle } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
@@ -130,15 +130,13 @@ export default function OwnerBookingsPage() {
                   <tr key={b._id} className="border-b border-gray-50 align-top transition last:border-0 hover:bg-gray-50/50">
                     <td className="p-4">
                       <div className="font-medium text-gray-900">{b.customer?.fullName}</div>
-                      <div className="text-xs text-gray-500">{b.customer?.email}</div>
-                      <Link href={`/messages?booking=${b._id}`} className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
-                        <MessageCircle className="h-3 w-3" aria-hidden="true" /> {t('Message')}
+                      {/* no guest phone or email: Meskan is the intermediary, write to Meskan about this booking */}
+                      <Link
+                        href={`/messages?about=${encodeURIComponent(`${t('Réservation')} — ${property?.name || ''} · ${b.customer?.fullName || ''} · ${new Date(b.checkIn).toLocaleDateString(dateLocale())}`)}`}
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
+                      >
+                        <MessageCircle className="h-3 w-3" aria-hidden="true" /> {t('Contacter Meskan')}
                       </Link>
-                      {b.customer?.phone && (
-                        <a href={`tel:${b.customer.phone}`} className="mt-1 inline-flex items-center gap-1 text-xs text-brand-600 hover:underline">
-                          <Phone className="h-3 w-3" aria-hidden="true" /> {b.customer.phone}
-                        </a>
-                      )}
                     </td>
                     <td className="p-4 text-gray-600">
                       {property?.name}

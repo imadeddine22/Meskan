@@ -288,6 +288,9 @@ function SellerListingsContent() {
                   placeholder={t('vendeur@email.com')}
                 />
               </div>
+              <p className="text-xs text-gray-500 md:col-span-2">
+                {t('Vos coordonnées restent privées : seule l’administration de Meskan les voit. Les acheteurs contactent Meskan, qui vous met en relation.')}
+              </p>
             </div>
 
             <div>

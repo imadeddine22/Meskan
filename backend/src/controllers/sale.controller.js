@@ -1,8 +1,15 @@
+import { meskanContact } from '../utils/meskanContact.js';
 import { isCountry } from '../utils/countries.js';
 import { paging, num } from '../utils/query.js';
 import HouseForSale from '../models/HouseForSale.js';
 import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
+
+// Two groups of property types: homes (to live in) and other real estate (land, shops, buildings, farms)
+const SALE_CATEGORIES = {
+  homes: ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Chalet'],
+  land: ['Terrain', 'Local commercial', 'Immeuble', 'Ferme'],
+};
 
 // GET /sales — public list of APPROVED sale listings with filters
 export const getListings = async (req, res, next) => {
@@ -16,6 +23,8 @@ export const getListings = async (req, res, next) => {
     if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type && type !== 'Tous') filter.type = type;
+    // ?category=homes (houses, flats…) | land (land, shops, buildings, farms) — the home page cards
+    else if (SALE_CATEGORIES[req.query.category]) filter.type = { $in: SALE_CATEGORIES[req.query.category] };
     // Rooms like Algerian "F" sizes: rooms=3 → exactly 3 (F3), rooms=5+ → 5 or more
     if (req.query.rooms) {
       const r = String(req.query.rooms);
@@ -104,6 +113,7 @@ export const getListings = async (req, res, next) => {
       page: pageNum,
       pages: Math.ceil(total / lim),
       listings,
+      contact: await meskanContact(), // buyers call Meskan, never the seller
     });
   } catch (err) {
     next(err);
@@ -113,7 +123,8 @@ export const getListings = async (req, res, next) => {
 // GET /sales/:id — public details (increments view count)
 export const getListing = async (req, res, next) => {
   try {
-    const listing = await HouseForSale.findById(req.params.id).populate('seller', 'fullName email phone avatar');
+    // no seller name or contact: Meskan is the intermediary between buyers and sellers (its contact comes along)
+    const listing = await HouseForSale.findById(req.params.id);
     // Pending/rejected listings are only visible to their seller and admins
     if (!listing || !canView(req, listing, 'seller')) {
       return res.status(404).json({ success: false, message: 'Listing not found' });
@@ -124,7 +135,7 @@ export const getListing = async (req, res, next) => {
       listing.views += 1;
     }
 
-    res.json({ success: true, listing });
+    res.json({ success: true, listing, contact: await meskanContact() });
   } catch (err) {
     next(err);
   }

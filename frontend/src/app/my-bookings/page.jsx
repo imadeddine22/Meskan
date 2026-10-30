@@ -183,8 +183,12 @@ export default function MyBookingsPage() {
                           : <ReviewForm booking={b} onDone={(id) => setReviewed((prev) => new Set(prev).add(String(id)))} />
                       )}
                       {b.status !== 'cancelled' && (
-                        <Link href={`/messages?booking=${b._id}`} className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline">
-                          <MessageCircle className="h-4 w-4" aria-hidden="true" /> {t('Contacter')}
+                        // questions about the stay go to Meskan, which handles them with the establishment
+                        <Link
+                          href={`/messages?about=${encodeURIComponent(`${t('Réservation')} — ${(b.hotel || b.house)?.name || ''} · ${new Date(b.checkIn).toLocaleDateString(dateLocale())}`)}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline"
+                        >
+                          <MessageCircle className="h-4 w-4" aria-hidden="true" /> {t('Contacter Meskan')}
                         </Link>
                       )}
                       {['pending', 'confirmed'].includes(b.status) && !started && (

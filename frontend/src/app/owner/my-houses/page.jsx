@@ -19,6 +19,7 @@ import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
 import { MULTI_COUNTRY } from '@/lib/countries';
 import DiscountFields from '@/components/DiscountFields';
+import { RENTAL_PERIODS, periodOf, rentPrices } from '@/lib/rentals';
 import PromoteListing from '@/components/PromoteListing';
 import ReelManager from '@/components/ReelManager';
 const SERVER = getServerURL();
@@ -39,7 +40,7 @@ const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Dupl
 const emptyForm = {
   name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
-  pricePerNight: '', amenities: '', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES }, discountPercent: 0, discountUntil: '',
+  rentalPeriod: 'daily', pricePerNight: '', pricePerMonth: '', pricePerYear: '', amenities: '', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES }, discountPercent: 0, discountUntil: '',
 };
 
 const labelStyle = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase' };
@@ -75,7 +76,7 @@ function MyHousesContent() {
       name: house.name, description: house.description || '', country: house.country || 'DZ', wilaya: house.wilaya,
       city: house.city, address: house.address || '', type: house.type, starRating: house.starRating || 3,
       rooms: house.rooms, bathrooms: house.bathrooms, capacity: house.capacity,
-      pricePerNight: house.pricePerNight, amenities: house.amenities?.join(', ') || '',
+      rentalPeriod: periodOf(house), pricePerNight: house.pricePerNight || '', pricePerMonth: house.pricePerMonth || '', pricePerYear: house.pricePerYear || '', amenities: house.amenities?.join(', ') || '',
       suitableFor: house.suitableFor || [],
       policies: policiesOf(house),
       discountPercent: house.discountPercent || 0, discountUntil: house.discountUntil ? String(house.discountUntil).slice(0, 10) : '',
@@ -217,11 +218,12 @@ function MyHousesContent() {
                     </p>
                   </div>
                 )}
-                {h.pricePerNight > 0 && (
-                  <p className="mt-2 font-bold text-brand-500">
-                    {h.pricePerNight.toLocaleString('fr-DZ')} {h.currency || 'DZD'}<span className="text-xs font-normal text-gray-400">{t('/nuit')}</span>
+                <p className="mt-2 text-xs font-semibold text-brand-600">{t(RENTAL_PERIODS.find((p) => p.key === periodOf(h))?.label)}</p>
+                {rentPrices(h).filter((x) => x.amount > 0).map(({ amount, unit }) => (
+                  <p key={unit} className="font-bold text-brand-500">
+                    {amount.toLocaleString('fr-DZ')} {h.currency || 'DZD'}<span className="text-xs font-normal text-gray-400"> {t(unit)}</span>
                   </p>
-                )}
+                ))}
                 <div className="mt-3 flex gap-2">
                   <PromoteListing kind="house" listing={h} className="flex-1" />
                   <ReelManager kind="house" listing={h} />
@@ -320,11 +322,44 @@ function MyHousesContent() {
                     onChange={(e) => setForm({ ...form, city: e.target.value })} />
                   <CommuneDatalist id="house-communes" wilaya={form.wilaya} />
                 </div>
-                <div>
-                  <label style={labelStyle}>{t('Prix/nuit')} ({currencyOf(form.country)}) *</label>
-                  <input type="number" min="0" required style={inputStyle} placeholder="5000" value={form.pricePerNight}
-                    onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })} />
+                {/* How the house is rented: by the day (booked online), the month, the year, or month and year */}
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>{t('Type de location')} *</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {RENTAL_PERIODS.map((p) => (
+                      <button
+                        key={p.key}
+                        type="button"
+                        aria-pressed={form.rentalPeriod === p.key}
+                        onClick={() => setForm({ ...form, rentalPeriod: p.key })}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${form.rentalPeriod === p.key ? 'bg-brand-500 text-white' : 'border border-gray-200 bg-white text-gray-600'}`}
+                      >
+                        {t(p.label)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                {form.rentalPeriod === 'daily' && (
+                  <div>
+                    <label style={labelStyle}>{t('Prix/nuit')} ({currencyOf(form.country)}) *</label>
+                    <input type="number" min="0" required style={inputStyle} placeholder="5000" value={form.pricePerNight}
+                      onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })} />
+                  </div>
+                )}
+                {['monthly', 'monthly_yearly'].includes(form.rentalPeriod) && (
+                  <div>
+                    <label style={labelStyle}>{t('Prix/mois')} ({currencyOf(form.country)}) *</label>
+                    <input type="number" min="0" required style={inputStyle} placeholder="45000" value={form.pricePerMonth}
+                      onChange={(e) => setForm({ ...form, pricePerMonth: e.target.value })} />
+                  </div>
+                )}
+                {['yearly', 'monthly_yearly'].includes(form.rentalPeriod) && (
+                  <div>
+                    <label style={labelStyle}>{t('Prix/an')} ({currencyOf(form.country)}) *</label>
+                    <input type="number" min="0" required style={inputStyle} placeholder="480000" value={form.pricePerYear}
+                      onChange={(e) => setForm({ ...form, pricePerYear: e.target.value })} />
+                  </div>
+                )}
                 <div>
                   <label style={labelStyle}>{t('Chambres')}</label>
                   <input type="number" min="1" style={inputStyle} value={form.rooms}

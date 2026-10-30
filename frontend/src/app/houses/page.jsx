@@ -12,6 +12,7 @@ import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
 import { COUNTRY_LIST, MULTI_COUNTRY, countryName } from '@/lib/countries';
 import { regionsFor } from '@/hooks/useWilayas';
+import { RENTAL_PERIODS } from '@/lib/rentals';
 const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 // Static WILAYAS list removed, loaded dynamically via useWilayas hook.
 
@@ -29,7 +30,7 @@ const MOCK = [
 export default function HousesPage() {
   const { t, lang } = useT();
   const { wilayas } = useWilayas();
-  const [filters, setFilters] = useState({ country: '', wilaya: '', type: '', q: '', sort: '' });
+  const [filters, setFilters] = useState({ country: '', wilaya: '', type: '', period: '', q: '', sort: '' });
   const initial = useInitialData();
   const [houses, setHouses] = useState(initial?.houses ?? []);
   const [loading, setLoading] = useState(!initial?.houses);
@@ -37,12 +38,15 @@ export default function HousesPage() {
   const [view, setView] = useState('grid');
 
   const silentFirstFetch = useRef(Boolean(initial));
+  const lastRequest = useRef(0); // only the latest request may update the list (filters change quickly)
   const fetchHouses = async () => {
+    const reqId = ++lastRequest.current;
     if (!silentFirstFetch.current) setLoading(true);
     silentFirstFetch.current = false;
     try {
       const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
       const { data } = await api.get('/houses', { params });
+      if (reqId !== lastRequest.current) return;
       setHouses(data.houses);
       setUsingMock(false);
     } catch {
@@ -57,13 +61,20 @@ export default function HousesPage() {
     }
   };
 
-  useEffect(() => { fetchHouses(); }, [filters.country, filters.wilaya]); // eslint-disable-line
+  // ?period=… opens a category directly (links from the menu or elsewhere)
+  useEffect(() => {
+    const period = new URLSearchParams(window.location.search).get('period');
+    if (RENTAL_PERIODS.some((p) => p.key === period)) setFilters((f) => ({ ...f, period }));
+  }, []);
+
+  useEffect(() => { fetchHouses(); }, [filters.country, filters.wilaya, filters.type, filters.period]); // eslint-disable-line
 
   const normalizeHouse = (h) => ({
     _id: h._id || h.id,
     name: h.name, city: h.city, wilaya: h.wilaya, type: h.type,
     rooms: h.rooms, bathrooms: h.bathrooms, capacity: h.capacity,
     pricePerNight: h.pricePerNight ?? h.price ?? 0,
+    rentalPeriod: h.rentalPeriod, pricePerMonth: h.pricePerMonth, pricePerYear: h.pricePerYear,
     discountPercent: h.discountPercent || 0, discountUntil: h.discountUntil || null, avgRating: h.avgRating || 0, reviewsCount: h.reviewsCount || 0,
     currency: h.currency || 'DZD',
     policies: h.policies,
@@ -144,6 +155,29 @@ export default function HousesPage() {
       </div>
 
       <section style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 24px' }}>
+        {/* Rental categories: by the day, the month, the year, or month and year */}
+        <div role="tablist" aria-label={t('Type de location')} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18, background: '#fff', border: '1px solid #ede9fe', borderRadius: 16, padding: 6, width: 'fit-content', maxWidth: '100%' }}>
+          {[{ key: '', label: 'Toutes les locations' }, ...RENTAL_PERIODS].map((p) => {
+            const on = filters.period === p.key;
+            return (
+              <button
+                key={p.key || 'all'}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => setFilters({ ...filters, period: p.key })}
+                style={{
+                  borderRadius: 12, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', border: 'none',
+                  background: on ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : 'transparent',
+                  color: on ? '#fff' : '#475569',
+                }}
+              >
+                {t(p.label)}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Type filters + view toggle */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto' }} className="no-scrollbar">

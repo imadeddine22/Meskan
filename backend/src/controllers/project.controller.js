@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, NO_DOCUMENT } from '../models/InvestmentProject.js';
 import InvestorInterest from '../models/InvestorInterest.js';
-import PricingSettings from '../models/PricingSettings.js';
+import { meskanContact } from '../utils/meskanContact.js';
 import User from '../models/User.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
@@ -31,11 +31,6 @@ const keptIds = (raw) => {
 };
 const notify = (to, subject, html) => to && sendEmail({ to, subject, html }).catch((e) => console.error('Email failed:', e.message));
 
-/** Meskan's own phone / email shown on every investment project (set by the admin). */
-export const meskanContact = async () => {
-  const s = await PricingSettings.findOne().select('investContact').lean();
-  return { phone: s?.investContact?.phone || '', email: s?.investContact?.email || '' };
-};
 /** Emails of the admins: they receive every investment request (Meskan is the intermediary). */
 const adminEmails = async () => (await User.find({ role: 'admin' }).select('email').lean()).map((u) => u.email).filter(Boolean);
 

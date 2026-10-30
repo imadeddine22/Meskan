@@ -19,6 +19,14 @@ const fmtDZD = (n, currency = 'DZD') => `${Number(n || 0).toLocaleString('fr-DZ'
 const notify = (to, subject, html) =>
   to && sendEmail({ to, subject, html }).catch((e) => console.error('Email failed:', e.message));
 
+/** The owner never gets the guest's phone or email (Meskan is the intermediary); admins do. */
+const withoutGuestContact = (booking, req) => {
+  if (req.user.role === 'admin') return booking;
+  const b = booking.toObject ? booking.toObject() : { ...booking };
+  if (b.customer && typeof b.customer === 'object') b.customer = { _id: b.customer._id, fullName: b.customer.fullName };
+  return b;
+};
+
 /** Load a booking with its property (+owner) and customer for owner/admin actions. */
 const loadForOwner = async (req, res) => {
   const booking = await Booking.findById(req.params.id)
@@ -169,6 +177,10 @@ export const createHouseBooking = async (req, res, next) => {
     if (house.status !== 'approved') {
       return res.status(400).json({ success: false, message: 'House is not available for booking' });
     }
+    // monthly / yearly rentals are arranged through Meskan, not booked night by night
+    if (house.rentalPeriod && house.rentalPeriod !== 'daily') {
+      return res.status(400).json({ success: false, message: 'This house is rented by the month or the year: contact Meskan to rent it' });
+    }
 
     const start = new Date(checkIn);
     const end = new Date(checkOut);
@@ -254,7 +266,7 @@ export const getOwnerBookings = async (req, res, next) => {
       .populate('hotel', 'name wilaya city')
       .populate('room', 'title type')
       .populate('house', 'name wilaya city type')
-      .populate('customer', 'fullName email phone')
+      .populate('customer', 'fullName') // no guest phone or email: Meskan is the intermediary
       .sort({ createdAt: -1 });
     res.json({ success: true, count: bookings.length, bookings });
   } catch (err) {
@@ -331,7 +343,7 @@ export const confirmBooking = async (req, res, next) => {
        est confirmée. Montant à régler sur place à l'arrivée : <strong>${fmtDZD(booking.totalPrice, booking.currency)}</strong>.</p>
        <p><a href="${CLIENT_URL}/my-bookings">Voir mes réservations</a></p>`
     );
-    res.json({ success: true, booking });
+    res.json({ success: true, booking: withoutGuestContact(booking, req) });
   } catch (err) {
     next(err);
   }
@@ -359,7 +371,7 @@ export const rejectBooking = async (req, res, next) => {
        n'a pas pu être acceptée.${booking.rejectionReason ? ` Motif : ${escapeHtml(booking.rejectionReason)}` : ''}</p>
        <p><a href="${CLIENT_URL}/hotels">Trouver un autre hébergement</a></p>`
     );
-    res.json({ success: true, booking });
+    res.json({ success: true, booking: withoutGuestContact(booking, req) });
   } catch (err) {
     next(err);
   }
@@ -381,7 +393,7 @@ export const markBookingPaid = async (req, res, next) => {
     booking.paymentStatus = 'paid';
     booking.paidAt = new Date();
     await booking.save();
-    res.json({ success: true, booking });
+    res.json({ success: true, booking: withoutGuestContact(booking, req) });
   } catch (err) {
     next(err);
   }

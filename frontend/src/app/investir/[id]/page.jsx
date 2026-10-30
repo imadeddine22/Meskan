@@ -205,6 +205,10 @@ export default function ProjectPage() {
                   )}
                 </div>
               )}
+              {/* Meskan handles the deal up to the signature, for 2 % of its value */}
+              <p className="mt-4 rounded-xl bg-[#F5FBFC] px-3 py-2.5 text-xs leading-relaxed text-slate-600">
+                <strong style={{ color: PROJECT_COLORS.ink }}>{t('Meskan s’occupe de toutes les démarches')}</strong> — {t('papiers, négociation, contrat, notaire — jusqu’à la signature. Vous payez 2 % de la valeur de la transaction, uniquement si elle aboutit.')}
+              </p>
             </div>
 
             {mine ? (
@@ -292,6 +296,7 @@ function InterestForm({ project, user }) {
       <button type="submit" disabled={sending} className="inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold text-white shadow transition hover:brightness-95 disabled:opacity-60" style={{ background: projectGradient }}>
         <Send className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" /> {sending ? t('Envoi...') : capital ? t('Envoyer ma proposition') : t('Envoyer ma demande')}
       </button>
+      <p className="text-center text-xs font-semibold text-slate-500">{t('Envoyer une demande est gratuit : vous payez 2 % de la valeur de la transaction, uniquement si elle aboutit.')}</p>
     </form>
   );
 }

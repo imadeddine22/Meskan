@@ -28,6 +28,7 @@ import { addWilaya } from '../controllers/wilaya.controller.js';
 import { getHotelDemand, setFeaturedHotels } from '../controllers/featured.controller.js';
 import { getReelQueue, approveReel, rejectReel } from '../controllers/reel.controller.js';
 import { getProjectQueue, approveProject, rejectProject, getAllInterests, markInterestSeen } from '../controllers/project.controller.js';
+import { listThreads, adminUnread, getThread, replyToUser } from '../controllers/support.controller.js';
 import { getReferrals } from '../controllers/referral.controller.js';
 import { protect, authorize } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
@@ -56,6 +57,11 @@ router.put('/projects/:id/reject', rejectProject);
 // Requests sent on investment projects: Meskan puts the two parties in touch
 router.get('/project-interests', getAllInterests);
 router.put('/project-interests/:id/seen', markInterestSeen);
+// Conversations between users and Meskan (users never write to each other)
+router.get('/support', listThreads);
+router.get('/support/unread', adminUnread);
+router.get('/support/:id', getThread);
+router.post('/support/user/:userId/messages', replyToUser);
 
 // How visitors heard about the site (welcome notification answers)
 router.get('/referrals', getReferrals);

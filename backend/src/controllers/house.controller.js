@@ -1,15 +1,16 @@
+import { meskanContact } from '../utils/meskanContact.js';
 import { parseDiscount } from '../utils/pricing.js';
 import { paging, num } from '../utils/query.js';
 import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
-import House from '../models/House.js';
+import House, { periodFilter } from '../models/House.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
 
 // Fields an owner may set. Status, ratings and owner are server-controlled.
-const EDITABLE = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'starRating', 'rooms', 'bathrooms', 'capacity', 'pricePerNight'];
+const EDITABLE = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'starRating', 'rooms', 'bathrooms', 'capacity', 'rentalPeriod', 'pricePerNight', 'pricePerMonth', 'pricePerYear'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /houses — public list of APPROVED houses with filters
@@ -24,6 +25,8 @@ export const getHouses = async (req, res, next) => {
     if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
+    // ?period=daily|monthly|yearly|monthly_yearly — the rentals page categories
+    Object.assign(filter, periodFilter(req.query.period));
     if (q) filter.name = searchRegex(q);
     const lo = num(minPrice);
     const hi = num(maxPrice);
@@ -64,10 +67,11 @@ export const getHouses = async (req, res, next) => {
 // GET /houses/:id — public details
 export const getHouse = async (req, res, next) => {
   try {
-    const house = await House.findById(req.params.id).populate('owner', 'fullName email phone avatar');
+    // no owner name or contact: Meskan is the intermediary between guests and owners (its contact comes along)
+    const house = await House.findById(req.params.id);
     // Pending/rejected houses are only visible to their owner and admins
     if (!house || !canView(req, house)) return res.status(404).json({ success: false, message: 'House not found' });
-    res.json({ success: true, house });
+    res.json({ success: true, house, contact: await meskanContact() });
   } catch (err) {
     next(err);
   }
@@ -79,6 +83,8 @@ export const getMyHouses = async (req, res, next) => {
     const { type } = req.query;
     const filter = { owner: req.user._id };
     if (type) filter.type = type;
+    // ?period=daily|monthly|yearly|monthly_yearly — the rentals page categories
+    Object.assign(filter, periodFilter(req.query.period));
     const houses = await House.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, count: houses.length, houses });
   } catch (err) {

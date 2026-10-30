@@ -38,7 +38,7 @@ export const getMyListings = async (req, res, next) => {
     const filter = { seller: req.user._id };
     if (type) filter.type = type;
     if (status) filter.status = status;
-    const listings = await HouseForSale.find(filter).sort({ createdAt: -1 });
+    const listings = await HouseForSale.find(filter).select('+contactPhone +contactEmail').sort({ createdAt: -1 });
     res.json({ success: true, count: listings.length, listings });
   } catch (err) {
     next(err);
@@ -71,7 +71,7 @@ export const createListing = async (req, res, next) => {
 // PUT /seller/listings/:id — update own listing
 export const updateListing = async (req, res, next) => {
   try {
-    const listing = await HouseForSale.findById(req.params.id);
+    const listing = await HouseForSale.findById(req.params.id).select('+contactPhone +contactEmail');
     if (!listing) return res.status(404).json({ success: false, message: 'Listing not found' });
     if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not your listing' });
@@ -102,7 +102,7 @@ export const updateListing = async (req, res, next) => {
 // DELETE /seller/listings/:id — delete own listing
 export const deleteListing = async (req, res, next) => {
   try {
-    const listing = await HouseForSale.findById(req.params.id);
+    const listing = await HouseForSale.findById(req.params.id).select('+contactPhone +contactEmail');
     if (!listing) return res.status(404).json({ success: false, message: 'Listing not found' });
     if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not your listing' });

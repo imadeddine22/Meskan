@@ -26,10 +26,12 @@ import {
   Clapperboard,
   Landmark,
   Radio,
+  MessagesSquare,
 } from 'lucide-react';
 import api from '@/lib/api';
 import Avatar from '@/components/Avatar';
 import { useAuthStore } from '@/store/authStore';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 import { useT } from '@/lib/i18n/useT';
 const ADMIN_MENU = [
@@ -43,6 +45,7 @@ const ADMIN_MENU = [
   { href: '/admin/all-houses', label: 'Toutes les maisons', icon: Home },
   { href: '/admin/all-sales', label: 'Ventes immobilières', icon: Tag },
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },
+  { href: '/admin/support', label: 'Discussions', icon: MessagesSquare }, // users write only to Meskan
   { href: '/admin/messages', label: 'Messages', icon: Mail },
   { href: '/admin/testimonials', label: 'Avis clients', icon: MessageSquareQuote },
   { href: '/admin/referrals', label: 'Comment ils nous ont connus', icon: Radio },
@@ -61,6 +64,7 @@ export default function AdminLayout({ children }) {
   const [pendingReviews, setPendingReviews] = useState(0);
   const [pendingReels, setPendingReels] = useState(0);
   const [pendingProjects, setPendingProjects] = useState(0);
+  const unreadChats = useUnreadMessages(user); // users' messages waiting for Meskan
 
   useEffect(() => {
     if (loading) return;
@@ -116,7 +120,7 @@ export default function AdminLayout({ children }) {
           {ADMIN_MENU.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
-            const badge = item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : item.href === '/admin/reels' ? pendingReels : item.href === '/admin/projects' ? pendingProjects : 0;
+            const badge = item.href === '/admin/support' ? unreadChats : item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : item.href === '/admin/reels' ? pendingReels : item.href === '/admin/projects' ? pendingProjects : 0;
             return (
               <Link
                 key={item.href}

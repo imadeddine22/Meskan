@@ -34,8 +34,9 @@ const houseForSaleSchema = new mongoose.Schema(
     rooms: { type: Number, default: 1, min: 0 },
     bathrooms: { type: Number, default: 1, min: 0 },
     amenities: [{ type: String }],
-    contactPhone: { type: String, default: '' },
-    contactEmail: { type: String, default: '' },
+    // The seller's own contact: never public (Meskan is the intermediary); only the seller and the admins load it
+    contactPhone: { type: String, default: '', select: false },
+    contactEmail: { type: String, default: '', select: false },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],

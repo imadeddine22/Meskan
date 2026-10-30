@@ -28,7 +28,7 @@ import saleRoutes from './routes/sale.routes.js';
 import wilayaRoutes from './routes/wilaya.routes.js';
 import pricingRoutes from './routes/pricing.routes.js';
 import testimonialRoutes from './routes/testimonial.routes.js';
-import conversationRoutes from './routes/conversation.routes.js';
+import supportRoutes from './routes/support.routes.js';
 import feedRoutes from './routes/feed.routes.js';
 import reelRoutes from './routes/reel.routes.js';
 import projectRoutes from './routes/project.routes.js';
@@ -111,7 +111,8 @@ app.use('/api/v1/sales', saleRoutes);
 app.use('/api/v1/wilayas', wilayaRoutes);
 app.use('/api/v1/pricing', pricingRoutes);
 app.use('/api/v1/testimonials', testimonialRoutes);
-app.use('/api/v1/conversations', conversationRoutes);
+// users write only to Meskan (the intermediary), never to each other
+app.use('/api/v1/support', supportRoutes);
 app.use('/api/v1/feeds', feedRoutes);
 app.use('/api/v1/reels', reelRoutes);
 app.use('/api/v1/projects', projectRoutes);

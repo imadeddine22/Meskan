@@ -12,6 +12,7 @@ import { formatDZD } from '@/lib/data';
 import { PolicyBadges } from '@/components/Policies';
 import { DealPrice, ScoreBadge } from '@/components/Score';
 import { effectivePrice } from '@/lib/scores';
+import { RENTAL_PERIODS, periodOf, isNightly, rentPrices } from '@/lib/rentals';
 export default function HouseCard({ house, list = false }) {
   const { t, lang } = useT();
   const rawImg = house.images?.[0]?.url || house.img || null;
@@ -20,10 +21,13 @@ export default function HouseCard({ house, list = false }) {
 
   const deal = effectivePrice({ ...house, pricePerNight: house.pricePerNight ?? house.price ?? 0 });
   const price = deal.price;
+  const nightly = isNightly(house);
+  const badge = nightly ? price : rentPrices(house)[0]?.amount || 0;
+  const period = RENTAL_PERIODS.find((p) => p.key === periodOf(house));
 
   return (
     <div
-      className={`group overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1 relative ${list ? 'flex' : ''}`}
+      className={`group isolate overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1 relative ${list ? 'flex' : ''}`}
     >
       <Link
         href={`/houses/${house._id || house.id}`}
@@ -39,11 +43,11 @@ export default function HouseCard({ house, list = false }) {
           />
           {/* Type badge */}
           <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold text-brand-500 shadow">
-            {t(house.type || 'Maison')}
+            {t(house.type || 'Maison')} · {t(period.short)}
           </span>
           {/* Price badge */}
           <span className="absolute right-3 top-3 rounded-full bg-brand-500 px-2.5 py-1 text-xs font-bold text-white shadow">
-            {price > 0 ? formatDZD(price, house.currency) : t('Sur demande')}
+            {badge > 0 ? formatDZD(badge, house.currency) : t('Sur demande')}
           </span>
         </div>
 
@@ -77,11 +81,22 @@ export default function HouseCard({ house, list = false }) {
             )}
           </div>
 
-          {/* Price */}
+          {/* Price: per night (with any running deal), or per month / per year */}
           <div className="mt-auto pt-4">
-            {price > 0 ? <DealPrice {...deal} currency={house.currency} className="text-xl font-extrabold text-brand-500" /> : <span className="text-xl font-extrabold text-brand-500">—</span>}
-            <span className="text-sm text-gray-400"> {t('/ nuit')}</span>
-            <ApproxPrice amount={price} currency={house.currency} className="block text-xs text-gray-400" />
+            {nightly ? (
+              <>
+                {price > 0 ? <DealPrice {...deal} currency={house.currency} className="text-xl font-extrabold text-brand-500" /> : <span className="text-xl font-extrabold text-brand-500">—</span>}
+                <span className="text-sm text-gray-400"> {t('/ nuit')}</span>
+                <ApproxPrice amount={price} currency={house.currency} className="block text-xs text-gray-400" />
+              </>
+            ) : (
+              rentPrices(house).map(({ amount, unit }) => (
+                <p key={unit} className="leading-tight">
+                  <span className="text-xl font-extrabold text-brand-500">{amount > 0 ? formatDZD(amount, house.currency) : t('Sur demande')}</span>
+                  <span className="text-sm text-gray-400"> {t(unit)}</span>
+                </p>
+              ))
+            )}
           </div>
         </div>
       </Link>
