@@ -11,7 +11,7 @@ const CARDS = [
   { href: '/sales', photo: '/images/home/house-for-sale.jpg', badge: 'Annonces vérifiées', title: 'Biens immobiliers à vendre', sub: 'Appartements, villas, terrains, locaux', foot: 'Partout en Algérie', footIcon: MapPin },
   { href: '/houses', photo: '/images/home/rental-living-room.jpg', badge: 'Au jour, au mois ou à l’année', title: 'Maisons à louer', sub: 'Villas, appartements, chalets', foot: 'Dans les 69 wilayas', footIcon: MapPin },
   { href: '/hotels', photo: '/images/home/hotel-pool.jpg', badge: 'Paiement sur place', title: 'Réservation d’hôtels', sub: 'Chambres dans toute l’Algérie', foot: 'Dans les 69 wilayas', footIcon: MapPin },
-  { href: '/investir', photo: '/images/home/investment-field.jpg', badge: '2 % seulement si la transaction aboutit', title: 'Investissement', sub: 'Projets et investisseurs réunis par Meskan', foot: 'Accompagnement jusqu’à la signature', footIcon: Handshake },
+  { href: '/investir', photo: '/images/home/investment-field.jpg', badge: '2 % seulement si la transaction aboutit', title: 'Investissement', sub: 'Projets et investisseurs réunis par Meskan', foot: 'Mise en relation confidentielle', footIcon: Handshake },
 ];
 
 /**
