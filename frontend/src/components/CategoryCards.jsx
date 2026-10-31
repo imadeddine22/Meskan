@@ -9,9 +9,9 @@ const img = (id) => `https://images.unsplash.com/${id}?w=700&q=70&auto=format`;
 
 // What visitors can do on Meskan: each photo card opens its page
 const CARDS = [
+  { href: '/sales', photo: img('photo-1600585154526-990dced4db0d'), badge: 'Annonces vérifiées', title: 'Biens immobiliers à vendre', sub: 'Appartements, villas, terrains, locaux', foot: 'Partout en Algérie', footIcon: MapPin },
   { href: '/houses', photo: img('photo-1564013799919-ab600027ffc6'), badge: 'Au jour, au mois ou à l’année', title: 'Maisons à louer', sub: 'Villas, appartements, chalets', foot: 'Dans les 69 wilayas', footIcon: MapPin },
   { href: '/hotels', photo: img('photo-1566073771259-6a8506099945'), badge: 'Paiement sur place', title: 'Réservation d’hôtels', sub: 'Chambres dans toute l’Algérie', foot: 'Dans les 69 wilayas', footIcon: MapPin },
-  { href: '/sales', photo: img('photo-1600585154526-990dced4db0d'), badge: 'Annonces vérifiées', title: 'Biens immobiliers à vendre', sub: 'Appartements, villas, terrains, locaux', foot: 'Partout en Algérie', footIcon: MapPin },
   { href: '/investir', photo: img('photo-1500382017468-9049fed747ef'), badge: '2 % seulement si la transaction aboutit', title: 'Investissement', sub: 'Projets et investisseurs réunis par Meskan', foot: 'Accompagnement jusqu’à la signature', footIcon: Handshake },
 ];
 
