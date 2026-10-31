@@ -5,15 +5,13 @@ import { ChevronLeft, ChevronRight, MapPin, Handshake } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import { useT } from '@/lib/i18n/useT';
 
-const img = (id) => `https://images.unsplash.com/${id}?w=700&q=70&auto=format`;
-
 // What visitors can do on Meskan: each photo card opens its page.
-// Photos: the site owner's own (public/images/home); investment: fields of Maoklane, Sétif (Unsplash licence, free)
+// Photos: the site owner's own (public/images/home)
 const CARDS = [
   { href: '/sales', photo: '/images/home/house-for-sale.jpg', badge: 'Annonces vérifiées', title: 'Biens immobiliers à vendre', sub: 'Appartements, villas, terrains, locaux', foot: 'Partout en Algérie', footIcon: MapPin },
   { href: '/houses', photo: '/images/home/rental-living-room.jpg', badge: 'Au jour, au mois ou à l’année', title: 'Maisons à louer', sub: 'Villas, appartements, chalets', foot: 'Dans les 69 wilayas', footIcon: MapPin },
   { href: '/hotels', photo: '/images/home/hotel-pool.jpg', badge: 'Paiement sur place', title: 'Réservation d’hôtels', sub: 'Chambres dans toute l’Algérie', foot: 'Dans les 69 wilayas', footIcon: MapPin },
-  { href: '/investir', photo: img('photo-1748868964935-d677f339d5d8'), badge: '2 % seulement si la transaction aboutit', title: 'Investissement', sub: 'Projets et investisseurs réunis par Meskan', foot: 'Accompagnement jusqu’à la signature', footIcon: Handshake },
+  { href: '/investir', photo: '/images/home/investment-field.jpg', badge: '2 % seulement si la transaction aboutit', title: 'Investissement', sub: 'Projets et investisseurs réunis par Meskan', foot: 'Accompagnement jusqu’à la signature', footIcon: Handshake },
 ];
 
 /**
