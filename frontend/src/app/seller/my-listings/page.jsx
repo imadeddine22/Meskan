@@ -13,6 +13,7 @@ import CommuneDatalist from '@/components/CommuneDatalist';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import SalePriceNotice from '@/components/SalePriceNotice';
 import { MULTI_COUNTRY } from '@/lib/countries';
 import PromoteListing from '@/components/PromoteListing';
 import ReelManager from '@/components/ReelManager';
@@ -75,7 +76,7 @@ function SellerListingsContent() {
       city: listing.city || '',
       address: listing.address || '',
       type: listing.type || 'Appartement',
-      price: listing.price?.toString() || '',
+      price: (listing.sellerPrice ?? listing.price)?.toString() || '', // the seller's own price (buyers see it + 1 %)
       area: listing.area?.toString() || '',
       rooms: listing.rooms?.toString() || '1',
       bathrooms: listing.bathrooms?.toString() || '1',
@@ -269,6 +270,8 @@ function SellerListingsContent() {
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
                 />
               </div>
+              {/* Meskan adds 1 % to the seller's price: say it here, with the price buyers will see */}
+              <SalePriceNotice price={form.price} currency={currencyOf(form.country)} className="md:col-span-4" />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -383,7 +386,10 @@ function SellerListingsContent() {
                   </p>
 
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
+                    <div>
+                      <p className="text-lg font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
+                      {listing.sellerPrice != null && listing.sellerPrice !== listing.price && <p className="text-[11px] text-gray-400">{t('Votre prix :')} {formatDZD(listing.sellerPrice, listing.currency)} · {t('+1 % Meskan')}</p>}
+                    </div>
                     <div className="flex items-center gap-1 text-xs text-gray-400">
                       <Eye className="h-3.5 w-3.5" /> {listing.views || 0}
                     </div>

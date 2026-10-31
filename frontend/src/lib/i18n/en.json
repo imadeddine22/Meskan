@@ -1817,5 +1817,11 @@
   "Location au mois, moins de 7 mois : {fee}.": "Monthly rental, under 7 months: {fee}.",
   "Location au mois, 7 mois ou plus : {fee}.": "Monthly rental, 7 months or more: {fee}.",
   "Location à l’année : {fee}.": "Yearly rental: {fee}.",
-  "Ces frais ne sont dus que si la location est conclue grâce à Meskan.": "This fee is due only if the rental is concluded through Meskan."
+  "Ces frais ne sont dus que si la location est conclue grâce à Meskan.": "This fee is due only if the rental is concluded through Meskan.",
+  "Meskan ajoute automatiquement 1 % à votre prix": "Meskan automatically adds 1% to your price",
+  "Indiquez votre prix : le prix affiché aux acheteurs comprend en plus 1 % pour Meskan.": "Enter your price: the price shown to buyers includes an extra 1% for Meskan.",
+  "Votre prix :": "Your price:",
+  "Prix affiché :": "Displayed price:",
+  "Prix du vendeur :": "Seller’s price:",
+  "+1 % Meskan": "+1% Meskan"
 }

@@ -10,6 +10,7 @@ import ImageUploader from '@/components/ImageUploader';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import SalePriceNotice from '@/components/SalePriceNotice';
 import { MULTI_COUNTRY } from '@/lib/countries';
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
@@ -305,6 +306,8 @@ export default function AdminAllSales() {
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-brand-500 transition"
                 />
               </div>
+              {/* Meskan adds 1 % to the seller's price: say it here, with the price buyers will see */}
+              <SalePriceNotice price={form.price} currency={currencyOf(form.country)} className="md:col-span-4" />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -441,6 +444,7 @@ export default function AdminAllSales() {
               {/* Price */}
               <div className="text-right shrink-0 cursor-pointer" onClick={() => setViewingSale(sale)}>
                 <p className="font-extrabold text-emerald-600">{formatDZD(sale.price, sale.currency)}</p>
+                {sale.sellerPrice != null && sale.sellerPrice !== sale.price && <p className="text-[11px] text-gray-400">{t('Prix du vendeur :')} {formatDZD(sale.sellerPrice, sale.currency)}</p>}
                 <p className="text-xs text-gray-400">{sale.seller?.fullName || t('Vendeur')}</p>
               </div>
 

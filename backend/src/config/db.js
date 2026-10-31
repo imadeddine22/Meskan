@@ -3,7 +3,7 @@ import Wilaya from '../models/Wilaya.js';
 import { WILAYAS } from '../utils/wilayas.js';
 import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
-import HouseForSale from '../models/HouseForSale.js';
+import HouseForSale, { MESKAN_SALE_RATE } from '../models/HouseForSale.js';
 import Booking from '../models/Booking.js';
 import Review from '../models/Review.js';
 
@@ -48,6 +48,15 @@ const migrateReviewScores = async () => {
   console.log(`⭐ ${old.length} review(s) moved to a score out of 10`);
 };
 
+// Sale listings from before Meskan's 1 %: their price becomes the seller's price and buyers see it + 1 %.
+// Only listings without a sellerPrice are touched, so it runs once.
+const migrateSalePrices = async () => {
+  const { modifiedCount } = await HouseForSale.updateMany({ sellerPrice: { $exists: false } }, [
+    { $set: { sellerPrice: '$price', price: { $round: [{ $multiply: ['$price', 1 + MESKAN_SALE_RATE] }, 0] } } },
+  ]);
+  if (modifiedCount) console.log(`🏷️  ${modifiedCount} sale listing(s): Meskan's 1 % added to the displayed price`);
+};
+
 /**
  * Connect to MongoDB using the MONGO_URI environment variable.
  * Exits the process on failure so the app doesn't run without a database.
@@ -57,6 +66,7 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`✅ MongoDB connected: ${conn.connection.host}`);
     await syncWilayas();
+    await migrateSalePrices();
   } catch (error) {
     console.error(`❌ MongoDB connection error: ${error.message}`);
     process.exit(1);

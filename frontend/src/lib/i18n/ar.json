@@ -1822,5 +1822,11 @@
   "Location au mois, moins de 7 mois : {fee}.": "الكراء الشهري لأقل من 7 أشهر: {fee}.",
   "Location au mois, 7 mois ou plus : {fee}.": "الكراء الشهري لـ 7 أشهر فأكثر: {fee}.",
   "Location à l’année : {fee}.": "الكراء السنوي: {fee}.",
-  "Ces frais ne sont dus que si la location est conclue grâce à Meskan.": "تُدفع هذه الرسوم فقط إذا تم الكراء عن طريق مسكن."
+  "Ces frais ne sont dus que si la location est conclue grâce à Meskan.": "تُدفع هذه الرسوم فقط إذا تم الكراء عن طريق مسكن.",
+  "Meskan ajoute automatiquement 1 % à votre prix": "مسكن يضيف تلقائياً 1% إلى سعرك",
+  "Indiquez votre prix : le prix affiché aux acheteurs comprend en plus 1 % pour Meskan.": "اكتب سعرك: السعر الذي يظهر للمشترين يتضمن زيادة 1% لمسكن.",
+  "Votre prix :": "سعرك:",
+  "Prix affiché :": "السعر المعروض:",
+  "Prix du vendeur :": "سعر البائع:",
+  "+1 % Meskan": "+1% لمسكن"
 }
