@@ -1811,5 +1811,11 @@
   "Meskan vous met en relation avec l’autre partie.": "Meskan puts you in touch with the other party.",
   "Les démarches qui suivent (papiers, contrat, notaire…) se font entre vous, sous votre responsabilité. Vous payez 2 % de la valeur de la transaction à Meskan, uniquement si elle aboutit.": "The steps that follow (papers, contract, notary…) are done between you, under your responsibility. You pay Meskan 2% of the deal value, only if it is completed.",
   "Meskan vous met en relation avec le bon partenaire.": "Meskan connects you with the right partner.",
-  "Meskan vous met en relation avec l’autre partie ; les démarches de la transaction se font ensuite entre vous. Vous payez 2 % de sa valeur, uniquement si elle aboutit.": "Meskan puts you in touch with the other party; the deal’s procedures are then handled between you. You pay 2% of its value, only if it is completed."
+  "Meskan vous met en relation avec l’autre partie ; les démarches de la transaction se font ensuite entre vous. Vous payez 2 % de sa valeur, uniquement si elle aboutit.": "Meskan puts you in touch with the other party; the deal’s procedures are then handled between you. You pay 2% of its value, only if it is completed.",
+  "Frais Meskan pour trouver votre locataire": "Meskan’s fee for finding your tenant",
+  "Location à la journée : aucun frais Meskan.": "Daily rental: no Meskan fee.",
+  "Location au mois, moins de 7 mois : {fee}.": "Monthly rental, under 7 months: {fee}.",
+  "Location au mois, 7 mois ou plus : {fee}.": "Monthly rental, 7 months or more: {fee}.",
+  "Location à l’année : {fee}.": "Yearly rental: {fee}.",
+  "Ces frais ne sont dus que si la location est conclue grâce à Meskan.": "This fee is due only if the rental is concluded through Meskan."
 }

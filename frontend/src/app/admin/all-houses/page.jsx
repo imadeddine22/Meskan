@@ -13,6 +13,7 @@ import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
 import { MULTI_COUNTRY } from '@/lib/countries';
 import DiscountFields from '@/components/DiscountFields';
+import RentFeeNotice from '@/components/RentFeeNotice';
 import { RENTAL_PERIODS, periodOf, rentPrices } from '@/lib/rentals';
 // Was referenced but never defined → the page crashed on render. Same list as the House model enum.
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
@@ -522,6 +523,7 @@ export default function AdminAllHousesPage() {
                       </button>
                     ))}
                   </div>
+                  <RentFeeNotice period={form.rentalPeriod} className="mt-3" />
                 </div>
 
                 {form.rentalPeriod === 'daily' && (

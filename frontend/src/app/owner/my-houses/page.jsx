@@ -19,6 +19,7 @@ import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
 import { MULTI_COUNTRY } from '@/lib/countries';
 import DiscountFields from '@/components/DiscountFields';
+import RentFeeNotice from '@/components/RentFeeNotice';
 import { RENTAL_PERIODS, periodOf, rentPrices } from '@/lib/rentals';
 import PromoteListing from '@/components/PromoteListing';
 import ReelManager from '@/components/ReelManager';
@@ -170,6 +171,9 @@ function MyHousesContent() {
           <Plus className="h-4 w-4" /> {t('Ajouter une maison')}
         </button>
       </div>
+
+      {/* Meskan's fees, so the owner knows them before publishing */}
+      <RentFeeNotice className="mb-6" />
 
       {loading ? (
         <p className="text-gray-500">{t('Chargement...')}</p>
@@ -338,6 +342,7 @@ function MyHousesContent() {
                       </button>
                     ))}
                   </div>
+                  <RentFeeNotice period={form.rentalPeriod} className="mt-3" />
                 </div>
                 {form.rentalPeriod === 'daily' && (
                   <div>

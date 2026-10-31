@@ -6,6 +6,10 @@ export const RENTAL_PERIODS = [
   { key: 'monthly_yearly', label: 'Mensuelle et annuelle', short: 'Mois et année' },
 ];
 
+// What Meskan takes when a house is rented through it (DZD), told to the owner where they publish:
+// month-to-month under 7 months → short; 7 months or more, or by the year → long; by the day → nothing
+export const RENT_FEES = { short: 5000, long: 10000 };
+
 /** Older houses have no period: they are rented by the night. */
 export const periodOf = (h) => h?.rentalPeriod || 'daily';
 export const isNightly = (h) => periodOf(h) === 'daily';
