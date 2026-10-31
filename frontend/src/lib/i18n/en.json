@@ -1020,8 +1020,6 @@
   "Hôtels en Algérie — Réservez dans les 69 wilayas": "Hotels in Algeria — Book in all 69 wilayas",
   "Hôtels vérifiés à Alger, Oran, Constantine, Béjaïa et dans toute l'Algérie : avis clients, prix en dinars, réservation gratuite, paiement sur place.": "Verified hotels in Algiers, Oran, Constantine, Béjaïa and across Algeria: guest reviews, prices in dinars, free booking, pay on site.",
   "Maisons et appartements à louer en Algérie": "Houses and apartments for rent in Algeria",
-  "Villas, appartements, chalets et studios à louer à la nuit dans toute l'Algérie. Annonces vérifiées, réservation en ligne et paiement en DZD.": "Villas, apartments, chalets and studios to rent by the night across Algeria. Verified listings, online booking, payment in DZD.",
-  "Annonces immobilières vérifiées : appartements, villas, terrains et locaux à vendre dans les 69 wilayas. Contactez directement les vendeurs.": "Verified property listings: apartments, villas, land and commercial premises for sale in all 69 wilayas. Contact sellers directly.",
   "Destinations en Algérie — Les 69 wilayas": "Destinations in Algeria — All 69 wilayas",
   "Explorez les 69 wilayas d'Algérie : hôtels, locations de vacances et biens à vendre, prix médians et conseils pour chaque destination.": "Explore Algeria's 69 wilayas: hotels, holiday rentals and properties for sale, median prices and tips for every destination.",
   "Tarifs pour propriétaires et vendeurs": "Pricing for owners and sellers",
@@ -1498,7 +1496,6 @@
   "{title} — {asset} à {city} cherche investisseur": "{title} — {asset} in {city} looking for an investor",
   "{asset} de {area} m² à {city} ({wilaya}) pour un projet {type}. Partenariat : {partnership}.": "{asset} of {area} m² in {city} ({wilaya}) for a {type} project. Partnership: {partnership}.",
   "Investir en Algérie : terrains, locaux et projets à la recherche d’investisseurs": "Invest in Algeria: land, commercial premises and projects looking for investors",
-  "Propriétaires de terrains, locaux ou bâtiments et investisseurs se rencontrent : commerces, résidences, hôtels, agriculture… Proposez votre projet ou trouvez un associé dans les 69 wilayas.": "Owners of land, shops or buildings meet investors: business, housing, hotels, farming… Propose your project or find a partner in all 69 wilayas.",
   "Vos biens proposés aux investisseurs et les demandes reçues.": "Your properties offered to investors and the requests you received.",
   "Vous n’avez pas encore proposé de projet.": "You haven’t proposed a project yet.",
   "Décrivez votre bien (terrain, local, bâtiment…) et le projet que vous imaginez : les investisseurs vous contacteront.": "Describe your property (land, shop, building…) and the project you have in mind: investors will contact you.",
@@ -1823,5 +1820,8 @@
   "Votre prix :": "Your price:",
   "Prix affiché :": "Displayed price:",
   "Prix du vendeur :": "Seller’s price:",
-  "+1 % Meskan": "+1% Meskan"
+  "+1 % Meskan": "+1% Meskan",
+  "Annonces immobilières vérifiées : appartements, villas, terrains et locaux à vendre dans les 69 wilayas. Meskan vous met en relation avec le vendeur.": "Verified property listings: apartments, villas, land and shops for sale in all 69 wilayas. Meskan puts you in touch with the seller.",
+  "Villas, appartements, chalets et studios à louer à la nuit, au mois ou à l'année dans toute l'Algérie. Annonces vérifiées, paiement en DZD.": "Villas, apartments, chalets and studios to rent by the night, month or year all over Algeria. Verified listings, payment in DZD.",
+  "Terrains, locaux et projets cherchant un investisseur, et investisseurs cherchant un projet : Meskan vous met en relation dans les 69 wilayas.": "Land, shops and projects looking for an investor, and investors looking for a project: Meskan connects you across all 69 wilayas."
 }

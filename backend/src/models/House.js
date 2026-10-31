@@ -55,7 +55,7 @@ const houseSchema = new mongoose.Schema(
     capacity: { type: Number, default: 2, min: 1 },
     // How the house is rented: by the night (bookable online), by the month, by the year, or both month and year
     rentalPeriod: { type: String, enum: RENTAL_PERIODS, default: 'daily', index: true },
-    pricePerNight: { type: Number, required: [isDaily, 'Price per night is required'], min: 0, default: 0 },
+    pricePerNight: { type: Number, required: [isDaily, 'Price per night is required'], min: 0 }, // no default: a nightly house must give it
     pricePerMonth: { type: Number, min: 0, default: 0 }, // 'monthly' / 'monthly_yearly'
     pricePerYear: { type: Number, min: 0, default: 0 }, // 'yearly' / 'monthly_yearly'
     status: {

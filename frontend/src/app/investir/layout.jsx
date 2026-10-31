@@ -8,7 +8,7 @@ export function generateMetadata() {
     path: '/investir',
     title: 'Investir en Algérie : terrains, locaux et projets à la recherche d’investisseurs',
     description:
-      'Propriétaires de terrains, locaux ou bâtiments et investisseurs se rencontrent : commerces, résidences, hôtels, agriculture… Proposez votre projet ou trouvez un associé dans les 69 wilayas.',
+      'Terrains, locaux et projets cherchant un investisseur, et investisseurs cherchant un projet : Meskan vous met en relation dans les 69 wilayas.',
   });
 }
 
