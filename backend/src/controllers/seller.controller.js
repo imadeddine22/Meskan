@@ -3,7 +3,8 @@ import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 
 // Fields a seller may set. Status, views and reference are server-controlled.
-const EDITABLE = ['title', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'price', 'area', 'rooms', 'bathrooms', 'contactPhone', 'contactEmail'];
+// 'price' in the form is the seller's own price (sellerPrice); the model adds Meskan's 1 % to give the displayed price
+const EDITABLE = ['title', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'area', 'rooms', 'bathrooms', 'contactPhone', 'contactEmail'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /seller/stats
@@ -53,6 +54,7 @@ export const createListing = async (req, res, next) => {
     const coordinates = parseCoordinates(req.body);
     const listing = await HouseForSale.create({
       ...pick(req.body, EDITABLE),
+      sellerPrice: req.body.price,
       amenities: parseArray(req.body.amenities),
       ...(coordinates && { coordinates }),
       seller: req.user._id,
@@ -80,6 +82,7 @@ export const updateListing = async (req, res, next) => {
     EDITABLE.forEach((f) => {
       if (req.body[f] !== undefined) listing[f] = req.body[f];
     });
+    if (req.body.price !== undefined && req.body.price !== '') listing.sellerPrice = Number(req.body.price);
     if (req.body.amenities !== undefined) listing.amenities = parseArray(req.body.amenities);
     const coordinates = parseCoordinates(req.body);
     if (coordinates) listing.coordinates = coordinates;

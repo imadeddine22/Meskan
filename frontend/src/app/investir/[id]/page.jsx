@@ -205,9 +205,9 @@ export default function ProjectPage() {
                   )}
                 </div>
               )}
-              {/* Meskan handles the deal up to the signature, for 2 % of its value */}
+              {/* Meskan puts the parties in touch (2 % if the deal is completed); the paperwork afterwards is theirs */}
               <p className="mt-4 rounded-xl bg-[#F5FBFC] px-3 py-2.5 text-xs leading-relaxed text-slate-600">
-                <strong style={{ color: PROJECT_COLORS.ink }}>{t('Meskan s’occupe de toutes les démarches')}</strong> — {t('papiers, négociation, contrat, notaire — jusqu’à la signature. Vous payez 2 % de la valeur de la transaction, uniquement si elle aboutit.')}
+                <strong style={{ color: PROJECT_COLORS.ink }}>{t('Meskan vous met en relation avec l’autre partie.')}</strong> {t('Les démarches qui suivent (papiers, contrat, notaire…) se font entre vous, sous votre responsabilité. Vous payez 2 % de la valeur de la transaction à Meskan, uniquement si elle aboutit.')}
               </p>
             </div>
 

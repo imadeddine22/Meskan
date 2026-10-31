@@ -7,7 +7,7 @@ export function generateMetadata() {
   return pageMeta({
     path: '/sales',
     title: 'Maisons et appartements à vendre en Algérie',
-    description: "Annonces immobilières vérifiées : appartements, villas, terrains et locaux à vendre dans les 69 wilayas. Contactez directement les vendeurs.",
+    description: "Annonces immobilières vérifiées : appartements, villas, terrains et locaux à vendre dans les 69 wilayas. Meskan vous met en relation avec le vendeur.",
   });
 }
 

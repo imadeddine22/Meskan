@@ -335,7 +335,7 @@ let newHotelId;
   }
   check('owner revenue counts only paid bookings (DZD)', stats.data.totalRevenue === (paidBy.DZD || 0), `stats=${stats.data.totalRevenue} paid=${paidBy.DZD}`);
   check('owner revenue is split by currency', JSON.stringify(stats.data.revenueByCurrency) === JSON.stringify(paidBy) || Object.entries(paidBy).every(([c, v]) => stats.data.revenueByCurrency?.[c] === v), JSON.stringify(stats.data.revenueByCurrency));
-  check('owner bookings include customer contact', ob.data.bookings?.[0]?.customer?.email !== undefined);
+  check('owner bookings show the guest name only (no phone/email: Meskan is the intermediary)', ob.data.bookings?.length > 0 && ob.data.bookings.every((b) => !b.customer || (b.customer.fullName && b.customer.email === undefined && b.customer.phone === undefined)));
   const ob2 = await req('GET', '/bookings/owner', { token: owner2.token });
   check("owner doesn't see other owners' bookings", (ob2.data.bookings || []).length === 0);
 }
@@ -386,7 +386,10 @@ let listingId;
   expectStatus("other seller can't delete", await req('DELETE', `/seller/listings/${listingId}`, { token: seller2.token }), 403);
   expectStatus('owner role blocked from seller API', await req('GET', '/seller/listings', { token: ownerToken }), 403);
   const u = await req('PUT', `/seller/listings/${listingId}`, { token: seller.token, form: { price: 24000000 } });
-  check('edit own listing', u.data.listing?.price === 24000000);
+  check('edit own listing: seller price kept, buyers see +1 % (Meskan)', u.data.listing?.sellerPrice === 24000000 && u.data.listing?.price === 24240000, `${u.data.listing?.sellerPrice} → ${u.data.listing?.price}`);
+  check('created listing: displayed price = seller price + 1 %', c.data.listing?.sellerPrice === 25000000 && c.data.listing?.price === 25250000, `${c.data.listing?.sellerPrice} → ${c.data.listing?.price}`);
+  const t2 = await req('PUT', `/seller/listings/${listingId}`, { token: seller.token, form: { description: 'Texte modifié' } });
+  check('editing something else keeps both prices', t2.data.listing?.sellerPrice === 24000000 && t2.data.listing?.price === 24240000);
   const s = await req('GET', '/seller/stats', { token: seller.token });
   check('seller stats', s.data.totalListings === 1 && s.data.pendingListings === 1);
   const invalid = await req('POST', '/seller/listings', { token: seller.token, form: { title: 'X', wilaya: 'Alger', city: 'Alger', price: -5 } });
@@ -631,40 +634,84 @@ describe('Scores out of 10, house reviews and deals');
   check('hotel "from" price includes the running deal', meridien?.discountPercent === 15 && meridien?.originalPrice > meridien?.price, JSON.stringify({ p: meridien?.price, o: meridien?.originalPrice }));
 }
 
-describe('Guest ↔ owner messages');
+describe('Messages: users only write to Meskan');
 {
-  const host = await register('owner');
   const admin = await login('admin@hotelsdz.dz', 'admin123');
-  const stranger = await register('customer');
-  const h = await req('POST', '/houses', {
-    token: host.token,
-    form: { name: `Maison Messages ${uid}`, description: 'Test', wilaya: 'Annaba', city: 'Annaba', type: 'Villa', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 9000, images: [PNG] },
-  });
-  await req('PUT', `/admin/houses/${h.data.house?._id}/approve`, { token: admin });
-  const bk = await req('POST', '/bookings/house', { token: customer.token, body: { houseId: h.data.house?._id, checkIn: day(70), checkOut: day(72) } });
-  const bookingId = bk.data.booking?._id;
+  const user = await register('customer');
+  expectStatus('old user-to-user chat is gone', await req('GET', '/conversations', { token: user.token }), 404);
+  expectStatus('visitor cannot read messages', await req('GET', '/support/thread'), 401);
+  const empty = await req('GET', '/support/thread', { token: user.token });
+  check('a new user starts with an empty conversation', empty.status === 200 && empty.data.thread?.messages?.length === 0);
+  expectStatus('empty message rejected', await req('POST', '/support/thread/messages', { token: user.token, body: { text: '   ' } }), 400);
+  expectStatus('too long rejected', await req('POST', '/support/thread/messages', { token: user.token, body: { text: 'x'.repeat(2001) } }), 400);
+  const sent = await req('POST', '/support/thread/messages', { token: user.token, body: { text: 'Bonjour, la villa est-elle libre ?', about: 'Villa test (REF-1)' } });
+  check('user writes to Meskan, with what it is about', sent.status === 201 && sent.data.message?.about === 'Villa test (REF-1)' && sent.data.message?.fromAdmin === false);
+  expectStatus('non-admin cannot read the admin inbox', await req('GET', '/admin/support', { token: user.token }), 403);
+  check('admin has an unread message', (await req('GET', '/admin/support/unread', { token: admin })).data.unread >= 1);
+  const inbox = await req('GET', '/admin/support', { token: admin });
+  const th = inbox.data.threads?.find((x) => x.user?.email === user.email);
+  check('admin sees the conversation with the user\'s contact', Boolean(th) && th.unread === 1 && th.lastMessage?.about === 'Villa test (REF-1)');
+  const before = (await req('GET', '/admin/support/unread', { token: admin })).data.unread;
+  check('admin opens it', (await req('GET', `/admin/support/${th?._id}`, { token: admin })).data.thread?.messages?.length === 1);
+  check('…then it is read', (await req('GET', '/admin/support/unread', { token: admin })).data.unread === before - 1);
+  expectStatus('admin replies', await req('POST', `/admin/support/user/${th?.user?._id}/messages`, { token: admin, body: { text: 'Oui, elle est libre en août.' } }), 201);
+  expectStatus('admin cannot write to an unknown user', await req('POST', '/admin/support/user/000000000000000000000000/messages', { token: admin, body: { text: 'x' } }), 404);
+  check('user has 1 unread reply', (await req('GET', '/support/unread', { token: user.token })).data.unread === 1);
+  const thread = await req('GET', '/support/thread', { token: user.token });
+  check('user reads the reply', thread.data.thread?.messages?.[1]?.fromAdmin === true);
+  check('…then it is read', (await req('GET', '/support/unread', { token: user.token })).data.unread === 0);
+}
 
-  expectStatus('visitor cannot read messages', await req('GET', '/conversations'), 401);
-  expectStatus('stranger cannot open a booking conversation', await req('GET', `/conversations/booking/${bookingId}`, { token: stranger.token }), 403);
-  const opened = await req('GET', `/conversations/booking/${bookingId}`, { token: customer.token });
-  expectStatus('guest opens the conversation of a booking', opened, 200);
-  const convId = opened.data.conversationId;
-  check('owner gets the same conversation', (await req('GET', `/conversations/booking/${bookingId}`, { token: host.token })).data.conversationId === convId);
+describe('Meskan is the only contact on listings');
+{
+  const house = (await req('GET', '/houses?limit=1')).data.houses?.[0];
+  const hd = await req('GET', `/houses/${house?._id}`);
+  check('house page: no owner name, phone or email', typeof hd.data.house?.owner === 'string');
+  check("house page: Meskan's contact comes along", hd.data.contact && 'phone' in hd.data.contact);
+  const sales = await req('GET', '/sales?limit=50');
+  check('sales list: no seller phone or email', sales.data.listings?.length > 0 && sales.data.listings.every((l) => l.contactPhone === undefined && l.contactEmail === undefined));
+  check("sales list: Meskan's contact comes along", sales.data.contact && 'phone' in sales.data.contact);
+  const sd = await req('GET', `/sales/${sales.data.listings[0]._id}`);
+  check('sale page: no seller name, phone or email', typeof sd.data.listing?.seller === 'string' && sd.data.listing.contactPhone === undefined);
+  const demoSeller = await login('vendeur@hotelsdz.dz', 'seller123'); // the test seller's listing was deleted by the admin section
+  check('seller still sees their own contact', (await req('GET', '/seller/listings', { token: demoSeller })).data.listings?.[0]?.contactEmail === 'vendeur@hotelsdz.dz');
+}
 
-  expectStatus('empty message rejected', await req('POST', `/conversations/${convId}/messages`, { token: customer.token, body: { text: '   ' } }), 400);
-  expectStatus('guest sends a message', await req('POST', `/conversations/${convId}/messages`, { token: customer.token, body: { text: 'Bonjour, parking disponible ?' } }), 201);
-  expectStatus('stranger cannot post', await req('POST', `/conversations/${convId}/messages`, { token: stranger.token, body: { text: 'spam' } }), 403);
-  expectStatus('stranger cannot read', await req('GET', `/conversations/${convId}`, { token: stranger.token }), 403);
+describe('Rental types (day, month, year, month and year)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const host = await register('owner');
+  const mk = (name, extra) => req('POST', '/houses', { token: host.token, form: { name: `${name} ${uid}`, description: 'Test', wilaya: 'Oran', city: 'Oran', type: 'Appartement', rooms: 2, bathrooms: 1, capacity: 4, images: [PNG], ...extra } });
+  const monthly = await mk('Appart au mois', { rentalPeriod: 'monthly', pricePerMonth: 45000 });
+  check('owner publishes a monthly rental (no nightly price needed)', monthly.status === 201 && monthly.data.house?.rentalPeriod === 'monthly' && monthly.data.house?.pricePerMonth === 45000, `${monthly.status} ${monthly.data.message || ''}`);
+  const yearly = await mk('Maison à l\'année', { rentalPeriod: 'yearly', pricePerYear: 480000 });
+  const both = await mk('Studio mois ou année', { rentalPeriod: 'monthly_yearly', pricePerMonth: 30000, pricePerYear: 320000 });
+  expectStatus('nightly rental still needs its price', await mk('Sans prix', { rentalPeriod: 'daily' }), 400);
+  expectStatus('unknown rental type rejected', await mk('Bizarre', { rentalPeriod: 'weekly', pricePerNight: 5000 }), 400);
+  for (const h of [monthly, yearly, both]) await req('PUT', `/admin/houses/${h.data.house?._id}/approve`, { token: admin });
+  const ids = (p) => req('GET', `/houses?limit=100${p ? `&period=${p}` : ''}`).then((r) => r.data.houses.map((h) => h._id));
+  const [mIds, yIds, bIds, dIds] = await Promise.all([ids('monthly'), ids('yearly'), ids('monthly_yearly'), ids('daily')]);
+  const [m, y, b] = [monthly, yearly, both].map((h) => h.data.house?._id);
+  check('"monthly" tab: monthly and month+year houses', mIds.includes(m) && mIds.includes(b) && !mIds.includes(y));
+  check('"yearly" tab: yearly and month+year houses', yIds.includes(y) && yIds.includes(b) && !yIds.includes(m));
+  check('"month and year" tab: only those', bIds.includes(b) && !bIds.includes(m) && !bIds.includes(y));
+  check('"daily" tab: none of them (older houses count as daily)', ![m, y, b].some((id) => dIds.includes(id)) && dIds.length > 0);
+  expectStatus('a yearly house cannot be booked by the night', await req('POST', '/bookings/house', { token: customer.token, body: { houseId: y, checkIn: day(40), checkOut: day(42) } }), 400);
+  const ed = await req('PUT', `/admin/houses/${m}`, { token: admin, form: { rentalPeriod: 'monthly_yearly', pricePerYear: 500000 } });
+  check('admin switches it to month and year', ed.data.house?.rentalPeriod === 'monthly_yearly' && ed.data.house?.pricePerYear === 500000);
+  const adm = await req('POST', '/admin/houses', { token: admin, form: { name: `Admin sans "adapté à" ${uid}`, wilaya: 'Oran', city: 'Oran', rooms: 1, bathrooms: 1, capacity: 2, pricePerNight: 5000, suitableFor: '' } });
+  check('admin creates a house without "suitable for" (used to fail)', adm.status === 201, `${adm.status} ${adm.data.message || ''}`);
+  for (const id of [m, y, b, adm.data.house?._id]) if (id) await req('DELETE', `/admin/houses/${id}`, { token: admin });
+}
 
-  check('owner has 1 unread message', (await req('GET', '/conversations/unread', { token: host.token })).data.unread === 1);
-  const read = await req('GET', `/conversations/${convId}`, { token: host.token });
-  check('owner reads the thread', read.data.conversation?.messages?.length === 1);
-  check('reading marks it as read', (await req('GET', '/conversations/unread', { token: host.token })).data.unread === 0);
-  await req('POST', `/conversations/${convId}/messages`, { token: host.token, body: { text: 'Oui, gratuit.' } });
-  const list = await req('GET', '/conversations', { token: customer.token });
-  const mine = list.data.conversations?.find((c) => c._id === convId);
-  check('guest list shows the reply as unread', mine?.unread === 1 && mine?.lastMessage?.text === 'Oui, gratuit.');
-  check('admin can read for support', (await req('GET', `/conversations/${convId}`, { token: admin })).status === 200);
+describe('Sales categories and 1 % in filters');
+{
+  const homes = (await req('GET', '/sales?category=homes&limit=50')).data.listings || [];
+  const land = (await req('GET', '/sales?category=land&limit=50')).data.listings || [];
+  check('homes: flats, villas, houses…', homes.length > 0 && homes.every((l) => ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Chalet'].includes(l.type)));
+  check('land: land, shops, buildings, farms', land.length > 0 && land.every((l) => ['Terrain', 'Local commercial', 'Immeuble', 'Ferme'].includes(l.type)));
+  check('every listing shows seller price + 1 %', [...homes, ...land].every((l) => l.price === Math.round(l.sellerPrice * 1.01)));
+  check('a single type still wins over the category', ((await req('GET', '/sales?category=land&type=Villa&limit=50')).data.listings || []).every((l) => l.type === 'Villa'));
 }
 
 describe('Sales search filters');
@@ -999,7 +1046,7 @@ describe('Investment projects (land or property looking for an investor)');
 {
   const admin = await login('admin@hotelsdz.dz', 'admin123');
   const list = await req('GET', '/projects');
-  check('public list: published projects only', list.status === 200 && list.data.total === 4 && list.data.projects.every((p) => p.status === 'approved' && p.owner?.fullName && !p.owner.email));
+  check('public list: published projects only', list.status === 200 && list.data.total === 4 && list.data.projects.every((p) => p.status === 'approved' && typeof p.owner === 'string' && p.contactPhone === undefined));
   check('filter by project type', (await req('GET', '/projects?projectType=Agricole')).data.projects.every((p) => p.projectType === 'Agricole'));
   check('filter by wilaya', (await req('GET', '/projects?wilaya=Tipaza')).data.projects.length === 1);
   check('search', (await req('GET', '/projects?q=serres')).data.projects.length === 1);
@@ -1061,8 +1108,22 @@ describe('Investment projects (land or property looking for an investor)');
   expectStatus('no request on an unpublished project', await req('POST', `/projects/${pendingSeed._id}/interest`, { body: interest }), 404);
   check('unread request counted in "my projects"', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.unreadInterests === 1);
   const received = await req('GET', `/projects/${pid}/interests`, { token: landOwner.token });
-  check('owner reads the request (name, phone, amount, message)', received.data.interests?.[0]?.phone === '0555 98 76 54' && received.data.interests[0].amount === 50000000);
-  check('…then it is marked read', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.unreadInterests === 0);
+  check('owner sees the message and amount, not who sent it (Meskan is the intermediary)', received.data.interests?.[0]?.amount === 50000000 && received.data.interests[0].phone === undefined && received.data.interests[0].name === undefined);
+  const inbox = (await req('GET', '/admin/project-interests', { token: admin })).data.interests || [];
+  const mine = inbox.find((i) => String(i.project?._id) === String(pid));
+  check('admin sees both parties: the investor…', mine?.phone === '0555 98 76 54' && mine?.name === 'Investisseur Test');
+  check('…and the publisher\'s private contact', mine?.project?.owner?.email === landOwner.email);
+  expectStatus('admin marks it handled', await req('PUT', `/admin/project-interests/${mine?._id}/seen`, { token: admin, body: { seen: true } }), 200);
+  expectStatus('only admins read all requests', await req('GET', '/admin/project-interests', { token: landOwner.token }), 403);
+  const pub = await req('GET', `/projects/${pid}`);
+  check('project page: no publisher contact, Meskan\'s contact instead', pub.data.project?.contactPhone === undefined && typeof pub.data.project?.owner === 'string' && pub.data.contact && 'phone' in pub.data.contact);
+
+  // Capital holders publish what they look for
+  const capital = await req('POST', '/projects', { token: stranger.token, body: { kind: 'capital', title: `Je cherche un terrain ${uid}`, assetType: 'Terrain', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: 'Oran', city: '', area: 800, areaMax: 2000, budgetMin: 5000000, budget: 20000000 } });
+  check('an investor publishes a search: no commune, papers or photos needed', capital.status === 201 && capital.data.project?.kind === 'capital' && capital.data.project?.areaMax === 2000, `${capital.status} ${capital.data.message || ''}`);
+  await req('PUT', `/admin/projects/${capital.data.project?._id}/approve`, { token: admin });
+  check('listed with investors\' searches only', (await req('GET', '/projects?kind=capital')).data.projects.some((p) => p._id === capital.data.project?._id) && !(await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === capital.data.project?._id));
+  if (capital.data.project) await req('DELETE', `/projects/${capital.data.project._id}`, { token: stranger.token });
   expectStatus('others cannot read the requests', await req('GET', `/projects/${pid}/interests`, { token: stranger.token }), 403);
   check('interest counter on the project', (await req('GET', `/projects/${pid}`)).data.project?.interestsCount === 1);
 

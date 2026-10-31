@@ -83,7 +83,7 @@ export default function InvestPage() {
             {t('Vous avez un terrain, un local, un bâtiment ou un autre bien que vous ne voulez pas vendre ? Proposez le projet que vous imaginez et trouvez un investisseur ou un associé. Investisseurs : découvrez des biens prêts pour vos projets partout en Algérie.')}
           </p>
           <p className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-            <ShieldCheck className="h-4 w-4" aria-hidden="true" /> {t('Meskan, votre intermédiaire de confiance : nous gérons tout jusqu’à la signature')}
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" /> {t('Meskan, votre intermédiaire de confiance : nous vous mettons en relation avec le bon partenaire')}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href={proposeHref} className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-bold text-white shadow-lg transition hover:scale-105" style={{ background: projectGradient }}>
@@ -105,12 +105,12 @@ export default function InvestPage() {
         </div>
       </section>
 
-      {/* How it works: Meskan is the intermediary from the first contact to the signed deal */}
+      {/* How it works: Meskan puts the two parties in touch; the deal itself is concluded between them */}
       <section className="mx-auto -mt-8 grid max-w-6xl gap-4 px-4 sm:grid-cols-3">
         {[
           { icon: Landmark, title: 'Vous publiez', text: 'Le propriétaire présente son bien et le projet qu’il imagine ; l’investisseur publie ce qu’il cherche (wilaya, surface, budget).' },
           { icon: MessagesSquare, title: 'Meskan vous met en relation', text: 'Les demandes arrivent chez Meskan : nous vérifions le sérieux de chaque partie et organisons la rencontre, en toute confidentialité.' },
-          { icon: Handshake, title: 'Meskan conclut la transaction', text: 'Nous suivons toutes les démarches jusqu’à la signature. Vous payez 2 % de la valeur de la transaction, uniquement si elle aboutit.' },
+          { icon: Handshake, title: 'Vous concluez entre vous', text: 'Une fois mis en relation, les deux parties finalisent la transaction elles-mêmes. Vous payez 2 % de sa valeur à Meskan, uniquement si elle aboutit.' },
         ].map(({ icon: Icon, title, text }, i) => (
           <div key={title} className="relative rounded-2xl bg-white p-5 shadow-card ring-1 ring-black/5">
             <span className="absolute end-4 top-4 text-3xl font-black text-slate-100">{i + 1}</span>
@@ -123,27 +123,28 @@ export default function InvestPage() {
         ))}
       </section>
 
-      {/* What Meskan handles, and its fee */}
+      {/* What Meskan does (putting people in touch — not the paperwork afterwards), and its fee */}
       <section className="mx-auto mt-6 max-w-6xl px-4">
         <div className="grid gap-6 rounded-3xl bg-white p-6 shadow-card ring-1 ring-black/5 md:grid-cols-[1fr_auto] md:items-center md:p-8">
           <div>
             <p className="flex items-center gap-2 text-lg font-black" style={{ color: PROJECT_COLORS.ink }}>
-              <ShieldCheck className="h-6 w-6 text-[#00B3D2]" aria-hidden="true" /> {t('Meskan s’occupe de toutes les démarches')}
+              <ShieldCheck className="h-6 w-6 text-[#00B3D2]" aria-hidden="true" /> {t('Le rôle de Meskan : vous mettre en relation')}
             </p>
             <ul className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
               {[
-                'Vérification des papiers du bien',
+                'Vérification des annonces avant publication',
+                'Recherche du partenaire qui correspond à votre projet',
                 'Mise en relation confidentielle des deux parties',
-                'Accompagnement dans la négociation',
-                'Rédaction et suivi du contrat de partenariat',
-                'Coordination avec le notaire et les administrations',
-                'Suivi jusqu’à la signature de la transaction',
+                'Organisation du premier contact entre vous',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" /> {t(item)}
                 </li>
               ))}
             </ul>
+            <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
+              {t('Après la mise en relation, les démarches de la transaction (papiers, contrat, notaire…) se font entre les deux parties : Meskan n’en est pas responsable.')}
+            </p>
           </div>
           <div className="rounded-2xl p-6 text-center text-white" style={{ background: projectGradient }}>
             <p className="text-5xl font-black">2 %</p>

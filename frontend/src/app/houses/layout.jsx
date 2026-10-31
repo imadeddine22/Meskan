@@ -7,7 +7,7 @@ export function generateMetadata() {
   return pageMeta({
     path: '/houses',
     title: 'Maisons et appartements à louer en Algérie',
-    description: "Villas, appartements, chalets et studios à louer à la nuit dans toute l'Algérie. Annonces vérifiées, réservation en ligne et paiement en DZD.",
+    description: "Villas, appartements, chalets et studios à louer à la nuit, au mois ou à l'année dans toute l'Algérie. Annonces vérifiées, paiement en DZD.",
   });
 }
 

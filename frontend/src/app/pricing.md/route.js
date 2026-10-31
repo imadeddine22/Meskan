@@ -36,6 +36,14 @@ Page complète : ${SITE_URL}/pricing
 ## Paiement des abonnements
 - Par virement bancaire ou versement CCP (coordonnées sur demande via ${SITE_URL}/contact)
 
+## Frais Meskan (intermédiaire)
+- Location à la nuit : aucun frais.
+- Location au mois, moins de 7 mois : 5 000 DA par location conclue.
+- Location à l'année, ou au mois pour 7 mois et plus : 10 000 DA par location conclue.
+- Vente : 1 % ajouté automatiquement au prix du vendeur (le prix affiché aux acheteurs inclut ce 1 %).
+- Investissement : 2 % de la valeur de la transaction, uniquement si elle aboutit. Meskan met en relation ; les démarches qui suivent (papiers, contrat, notaire) se font entre les parties.
+- Les utilisateurs contactent Meskan, qui fait le lien avec le propriétaire, le vendeur ou l'investisseur.
+
 ## Réservations des voyageurs
 - Gratuites : le voyageur envoie une demande, l'établissement l'accepte, le paiement se fait sur place à l'arrivée
 `;

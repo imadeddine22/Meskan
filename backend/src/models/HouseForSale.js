@@ -29,6 +29,9 @@ const houseForSaleSchema = new mongoose.Schema(
       enum: ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'],
       default: 'Appartement',
     },
+    // sellerPrice: what the seller asks; price: what buyers see = sellerPrice + Meskan's 1 % (set by the hook below,
+    // so every list, filter and sort works on the displayed price)
+    sellerPrice: { type: Number, min: 0 },
     price: { type: Number, required: [true, 'Price is required'], min: 0 },
     area: { type: Number, default: 0, min: 0 }, // m²
     rooms: { type: Number, default: 1, min: 0 },
@@ -49,6 +52,18 @@ const houseForSaleSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Meskan adds 1 % to every sale price (told to the seller when they publish)
+export const MESKAN_SALE_RATE = 0.01;
+export const displayedPrice = (sellerPrice) => Math.round(Number(sellerPrice) * (1 + MESKAN_SALE_RATE));
+
+// Before validation, so the required displayed price exists: a listing created with only a price (seed, old code)
+// takes it as the seller's price; whenever the seller's price changes, the displayed price follows
+houseForSaleSchema.pre('validate', function (next) {
+  if (this.sellerPrice == null && this.price != null) this.sellerPrice = this.price;
+  if (this.sellerPrice != null && (this.isNew || this.isModified('sellerPrice'))) this.price = displayedPrice(this.sellerPrice);
+  next();
+});
 
 houseForSaleSchema.pre('save', async function (next) {
   if (!this.reference) {
