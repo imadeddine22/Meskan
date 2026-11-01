@@ -4,10 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Search, MapPin, X, Tag, House, BedDouble, Landmark, ChevronDown, BadgeDollarSign } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import { QUICK_AREAS } from '@/lib/data';
-import { WILAYAS } from '@/lib/wilayas';
+import { WILAYA_LIST } from '@/lib/wilayas';
 import { useT } from '@/lib/i18n/useT';
 
 const SEARCH_DELAY_MS = 350;
+
+/** Lowercase, no accents, Arabic alef/teh-marbuta variants unified: 'Béjaïa' ~ 'bejaia', 'الجزائر' ~ 'الجزاير'. */
+const norm = (s = '') =>
+  String(s).normalize('NFD').replace(/[\u0300-\u036f\u064b-\u065f]/g, '').replace(/[\u0623\u0625\u0622]/g, '\u0627').replace(/\u0629/g, '\u0647').replace(/\u0649/g, '\u064a').toLowerCase().trim();
 
 // Shortcuts to the main sections, computers only (phones have the menu)
 const SHORTCUTS = [
@@ -27,8 +31,23 @@ export default function Hero({ value = '', onSearch }) {
 
   const [text, setText] = useState(value);
   const [shortcutsOpen, setShortcutsOpen] = useState(false); // quick-access buttons, opened with the arrow
+  const [listOpen, setListOpen] = useState(false); // the wide panel with the 69 wilayas
+  const formRef = useRef(null);
   const timer = useRef(null);
   const lastSent = useRef(value);
+
+  // Close the wilaya panel on a click outside the search box
+  useEffect(() => {
+    if (!listOpen) return undefined;
+    const onDown = (e) => !formRef.current?.contains(e.target) && setListOpen(false);
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [listOpen]);
+
+  // Wilayas matching what is typed (French or Arabic, accents ignored); all 69 when empty or a wilaya was just picked
+  const q = norm(text);
+  const picked = WILAYA_LIST.some((w) => norm(w.name) === q || norm(w.arabic) === q);
+  const matches = !q || picked ? WILAYA_LIST : WILAYA_LIST.filter((w) => norm(w.name).includes(q) || norm(w.arabic).includes(q) || String(w.code) === q);
 
   const send = (next) => {
     lastSent.current = next;
@@ -63,11 +82,20 @@ export default function Hero({ value = '', onSearch }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setListOpen(false);
     apply(text, { scroll: true });
   };
 
+  // A wilaya picked in the panel: shown in the visitor's language, searched by its stored (French) name
+  const pickWilaya = (w) => {
+    setText(lang === 'ar' ? w.arabic : w.name);
+    setListOpen(false);
+    apply(w.name, { scroll: true });
+  };
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-white to-gray-50 pb-16 pt-12 sm:pt-20">
+    // no overflow-hidden: the wilaya panel must be able to open below the hero, above the next section
+    <section className="relative z-20 bg-gradient-to-b from-brand-500/10 via-white to-gray-50 pb-16 pt-12 sm:pt-20">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         {/* Shortcuts (computers only): hidden behind an arrow; when opened, a column in the empty left
             area on wide screens, a row above the title on smaller computers */}
@@ -134,9 +162,10 @@ export default function Hero({ value = '', onSearch }) {
 
         {/* Search Box */}
         <form
+          ref={formRef}
           onSubmit={handleSubmit}
           role="search"
-          className="mx-auto mt-8 max-w-4xl rounded-3xl bg-white p-4 shadow-xl ring-1 ring-gray-100 sm:p-6"
+          className="relative mx-auto mt-8 max-w-4xl rounded-3xl bg-white p-4 shadow-xl ring-1 ring-gray-100 sm:p-6"
         >
           <div className="flex gap-4">
             {/* Wilaya / City */}
@@ -149,17 +178,16 @@ export default function Hero({ value = '', onSearch }) {
                 <input
                   id="hero-place"
                   type="search"
-                  list="hero-wilayas"
                   autoComplete="off"
                   value={text}
-                  onChange={(e) => onType(e.target.value)}
+                  onChange={(e) => { onType(e.target.value); setListOpen(true); }}
+                  onFocus={() => setListOpen(true)}
+                  onKeyDown={(e) => e.key === 'Escape' && setListOpen(false)}
+                  aria-expanded={listOpen}
+                  aria-controls="hero-wilayas"
                   placeholder={t.searchWilayaPlaceholder}
                   className="w-full rounded-xl border border-gray-200 py-3 text-sm font-semibold outline-none focus:border-brand-500 rtl:pr-10 rtl:pl-10 ltr:pl-10 ltr:pr-10"
                 />
-                <datalist id="hero-wilayas">
-                  {/* Arabic visitors pick/type Arabic names; the API maps them to the stored French names */}
-                  {WILAYAS.map((w) => <option key={w} value={lang === 'ar' ? t(w) : w} />)}
-                </datalist>
                 {text && (
                   <button
                     type="button"
@@ -184,6 +212,50 @@ export default function Hero({ value = '', onSearch }) {
               </button>
             </div>
           </div>
+
+          {/* All 69 wilayas in a wide panel under the field (the browser's own list showed ~5 at a time):
+              the whole width of the search box, in columns, filtered as the visitor types */}
+          {listOpen && (
+            <div
+              id="hero-wilayas"
+              role="listbox"
+              aria-label={t('Wilayas')}
+              className="absolute inset-x-0 top-[calc(100%-1rem)] z-30 mx-4 max-h-[60vh] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-gray-100 sm:mx-6"
+            >
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-xs font-bold text-gray-500">
+                  {matches.length === WILAYA_LIST.length ? t('Les 69 wilayas') : t('{n} wilaya(s)', { n: matches.length })}
+                </p>
+                <button type="button" onClick={() => setListOpen(false)} aria-label={t('Fermer')} className="grid h-8 w-8 place-items-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+              {matches.length ? (
+                <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {matches.map((w) => (
+                    <li key={w.code}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={value === w.name}
+                        onClick={() => pickWilaya(w)}
+                        className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-start text-sm font-semibold transition ${
+                          value === w.name ? 'bg-brand-50 text-brand-600' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="grid h-6 min-w-[1.75rem] shrink-0 place-items-center rounded-md bg-gray-100 px-1 text-[11px] font-bold text-gray-500" dir="ltr">
+                          {String(w.code).padStart(2, '0')}
+                        </span>
+                        <span className="truncate">{lang === 'ar' ? w.arabic : w.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="py-4 text-center text-sm text-gray-500">{t('Aucune wilaya ne correspond : la recherche portera sur les communes.')}</p>
+              )}
+            </div>
+          )}
 
           {/* Quick Areas */}
           <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">

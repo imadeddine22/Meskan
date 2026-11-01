@@ -1828,5 +1828,8 @@
   "+1 % Meskan": "+1% لمسكن",
   "Annonces immobilières vérifiées : appartements, villas, terrains et locaux à vendre dans les 69 wilayas. Meskan vous met en relation avec le vendeur.": "إعلانات عقارية موثّقة: شقق، فيلات، أراضٍ ومحلات للبيع في 69 ولاية. مسكن يربطك بالبائع.",
   "Villas, appartements, chalets et studios à louer à la nuit, au mois ou à l'année dans toute l'Algérie. Annonces vérifiées, paiement en DZD.": "فيلات، شقق، شاليهات واستوديوهات للكراء باليوم أو الشهر أو السنة في كل الجزائر. إعلانات موثّقة والدفع بالدينار.",
-  "Terrains, locaux et projets cherchant un investisseur, et investisseurs cherchant un projet : Meskan vous met en relation dans les 69 wilayas.": "أراضٍ ومحلات ومشاريع تبحث عن مستثمر، ومستثمرون يبحثون عن مشروع: مسكن يربط بينكم في 69 ولاية."
+  "Terrains, locaux et projets cherchant un investisseur, et investisseurs cherchant un projet : Meskan vous met en relation dans les 69 wilayas.": "أراضٍ ومحلات ومشاريع تبحث عن مستثمر، ومستثمرون يبحثون عن مشروع: مسكن يربط بينكم في 69 ولاية.",
+  "Les 69 wilayas": "الولايات الـ 69",
+  "{n} wilaya(s)": "{n} ولاية",
+  "Aucune wilaya ne correspond : la recherche portera sur les communes.": "لا توجد ولاية مطابقة: سيتم البحث في البلديات."
 }
