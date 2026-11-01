@@ -10,6 +10,7 @@ import { formatDZD } from '@/lib/data';
 import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import CommuneDatalist from '@/components/CommuneDatalist';
 
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
@@ -399,6 +400,8 @@ function SellerListingsContent() {
                     <p className="text-xs text-gray-400 mt-1">{listing.area} {t('m² ·')} {listing.rooms} {t('pcs ·')} {listing.bathrooms} {t('sdb')}</p>
                   )}
 
+                  {/* approved, then edited: still online while Meskan checks the changes */}
+                  <ChangedBadge item={listing} owner className="mb-2" />
                   {listing.status === 'rejected' && (
                     <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
                       <span className="font-bold block text-red-800">{t('⚠️ Annonce rejetée par l\'administration :')}</span>

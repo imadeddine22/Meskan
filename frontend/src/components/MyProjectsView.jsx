@@ -14,6 +14,7 @@ import { useWilayas } from '@/hooks/useWilayas';
 import { useCommunes } from '@/hooks/useCommunes';
 import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea, assetLabel, isCapital, budgetRange, areaRange, placeLabel } from '@/lib/projects';
 import { useAuthStore } from '@/store/authStore';
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
@@ -129,6 +130,7 @@ function MyProjects({ inDashboard }) {
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${st.cls}`}>
                           <st.icon className="h-3.5 w-3.5" aria-hidden="true" /> {t(st.label)}
                         </span>
+                        <ChangedBadge item={p} owner />
                         <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">{capital ? t('Je cherche un bien') : t('J’ai un bien')}</span>
                         <span className="text-xs text-slate-400">{p.reference}</span>
                       </div>

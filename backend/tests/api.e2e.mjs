@@ -714,6 +714,26 @@ describe('Sales categories and 1 % in filters');
   check('a single type still wins over the category', ((await req('GET', '/sales?category=land&type=Villa&limit=50')).data.listings || []).every((l) => l.type === 'Villa'));
 }
 
+describe('Edits after approval stay online (flagged for the admin)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const host = await register('owner');
+  const h = await req('POST', '/houses', { token: host.token, form: { name: `Maison modifiable ${uid}`, description: 'Test', wilaya: 'Oran', city: 'Oran', type: 'Villa', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 9000, images: [PNG] } });
+  const id = h.data.house?._id;
+  check('owner sees the pending house in their space', (await req('GET', '/houses/my/list', { token: host.token })).data.houses?.some((x) => x._id === id));
+  await req('PUT', `/admin/houses/${id}/approve`, { token: admin });
+  const e = await req('PUT', `/houses/${id}`, { token: host.token, form: { pricePerNight: 9500 } });
+  check('edit after approval: still approved and online', e.data.house?.status === 'approved' && (await req('GET', `/houses/${id}`)).status === 200);
+  check('…flagged for the admin', e.data.house?.changesToReview === true && (await req('GET', '/admin/houses/all?status=changed', { token: admin })).data.houses?.some((x) => x._id === id));
+  await req('PUT', `/admin/houses/${id}/approve`, { token: admin });
+  check('admin confirms → flag cleared', (await req('GET', `/houses/${id}`)).data.house?.changesToReview === false);
+  await req('PUT', `/houses/${id}`, { token: host.token, form: { pricePerNight: 9600 } });
+  await req('PUT', `/admin/houses/${id}/reject`, { token: admin, body: { reason: 'Photos floues' } });
+  expectStatus('admin refuses the changes → offline', await req('GET', `/houses/${id}`), 404);
+  check('owner fixes a refused house → back to pending', (await req('PUT', `/houses/${id}`, { token: host.token, form: { pricePerNight: 9700 } })).data.house?.status === 'pending');
+  await req('DELETE', `/houses/${id}`, { token: host.token });
+}
+
 describe('Sales search filters');
 {
   const all = (await req('GET', '/sales?limit=50')).data;

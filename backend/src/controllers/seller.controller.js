@@ -1,3 +1,4 @@
+import { afterOwnerEdit } from '../utils/reviewPlugin.js';
 import HouseForSale from '../models/HouseForSale.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
@@ -92,8 +93,8 @@ export const updateListing = async (req, res, next) => {
       listing.images.push(...uploaded);
     }
 
-    // Re-submit for approval if it was approved
-    if (listing.status === 'approved') listing.status = 'pending';
+    // Seller edits: an approved listing stays online and is flagged for the admin; a rejected one goes back to review
+    if (req.user.role !== 'admin') afterOwnerEdit(listing);
 
     await listing.save();
     res.json({ success: true, listing });

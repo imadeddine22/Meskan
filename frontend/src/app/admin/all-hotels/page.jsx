@@ -7,6 +7,7 @@ import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import api, { getImageUrl, getServerURL, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import AdminHotelDetails from '@/components/AdminHotelDetails';
 import CountrySelect from '@/components/CountrySelect';
@@ -176,6 +177,7 @@ export default function AdminAllHotelsPage() {
             { label: 'Tous', value: '' },
             { label: 'Approuvé', value: 'approved' },
             { label: 'En attente', value: 'pending' },
+            { label: 'Modifiés', value: 'changed' }, // approved, then edited by the owner (still online)
             { label: 'Rejeté', value: 'rejected' },
           ].map((f) => (
             <button
@@ -280,7 +282,8 @@ export default function AdminAllHotelsPage() {
                     >
                       <Eye style={{ width: 13, height: 13 }} />
                     </button>
-                    {h.status !== 'approved' && (
+                    <ChangedBadge item={h} />
+{(h.status !== 'approved' || h.changesToReview) && (
                       <button
                         onClick={() => handleStatusChange(h._id, 'approve')}
                         className="admin-btn"
@@ -585,7 +588,8 @@ export default function AdminAllHotelsPage() {
 
             {/* Action Bar */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t">
-              {viewingHotel.status !== 'approved' && (
+              <ChangedBadge item={viewingHotel} />
+{(viewingHotel.status !== 'approved' || viewingHotel.changesToReview) && (
                 <button
                   onClick={() => handleStatusChange(viewingHotel._id, 'approve')}
                   className="rounded-full bg-emerald-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-emerald-700 transition"

@@ -7,6 +7,7 @@ import { Plus, MapPin, Trash2, Pencil } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import api, { getImageUrl } from '@/lib/api';
 
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import PromoteListing from '@/components/PromoteListing';
 import ReelManager from '@/components/ReelManager';
@@ -86,6 +87,7 @@ export default function MyHotelsPage() {
                 </span>
               </div>
               <div className="p-4">
+                <ChangedBadge item={h} owner className="mb-2" />
                 <h3 className="font-bold text-gray-900">{h.name}</h3>
                 <p className="flex items-center gap-1 text-sm text-gray-500"><MapPin className="h-4 w-4 text-brand-500" /> {t(h.city)}, {t(h.wilaya)}</p>
                 {h.status === 'rejected' && (

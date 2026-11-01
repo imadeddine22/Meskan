@@ -6,12 +6,14 @@ import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { formatArea, assetLabel, documentLabel, isCapital, budgetRange, areaRange, placeLabel } from '@/lib/projects';
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 import MeskanContactForm from '@/components/MeskanContactForm';
 
 const FILTERS = [
   { key: 'pending', label: 'En attente' },
+  { key: 'changed', label: 'Modifiés' }, // approved, then edited by the owner (still online)
   { key: 'approved', label: 'Publiés' },
   { key: 'rejected', label: 'Refusés' },
   { key: 'requests', label: 'Demandes reçues' }, // requests from visitors: Meskan puts the two parties in touch
@@ -188,7 +190,8 @@ export default function AdminProjectsPage() {
                 )}
 
                 <div className="mt-auto flex flex-wrap gap-2 border-t border-gray-50 pt-3">
-                  {p.status !== 'approved' && (
+                  <ChangedBadge item={p} />
+{(p.status !== 'approved' || p.changesToReview) && (
                     <button disabled={busy === p._id} onClick={() => act(p, 'approve')} className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-green-600 px-3 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50">
                       <CheckCircle className="h-4 w-4" aria-hidden="true" /> {t('Publier')}
                     </button>
