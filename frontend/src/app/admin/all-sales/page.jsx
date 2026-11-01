@@ -7,6 +7,7 @@ import { formatDZD } from '@/lib/data';
 import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import ImageUploader from '@/components/ImageUploader';
 
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
@@ -17,6 +18,7 @@ const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'T
 const STATUS_OPTIONS = [
   { value: '', label: 'Tous les statuts' },
   { value: 'pending', label: 'En attente' },
+  { value: 'changed', label: 'Modifiées' }, // approved, then edited by the seller (still online)
   { value: 'approved', label: 'Approuvées' },
   { value: 'rejected', label: 'Rejetées' },
 ];
@@ -462,7 +464,8 @@ export default function AdminAllSales() {
                 >
                   <Eye className="h-5 w-5" />
                 </button>
-                {sale.status !== 'approved' && (
+                <ChangedBadge item={sale} />
+{(sale.status !== 'approved' || sale.changesToReview) && (
                   <button
                     onClick={() => handleAction(sale._id, 'approve')}
                     disabled={actionLoading === sale._id}
@@ -608,7 +611,8 @@ export default function AdminAllSales() {
 
             {/* Action Bar */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t">
-              {viewingSale.status !== 'approved' && (
+              <ChangedBadge item={viewingSale} />
+{(viewingSale.status !== 'approved' || viewingSale.changesToReview) && (
                 <button
                   onClick={() => handleAction(viewingSale._id, 'approve')}
                   className="rounded-full bg-emerald-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-emerald-700 transition"

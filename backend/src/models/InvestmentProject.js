@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { autoTranslate } from '../utils/autoTranslate.js';
 import { countryPlugin } from '../utils/countryPlugin.js';
+import { reviewPlugin } from '../utils/reviewPlugin.js';
 
 // Two kinds of listing:
 // - 'asset': a property (land, shop, building…) whose owner does not want to sell it but looks for an investor / partner for a project
@@ -67,6 +68,7 @@ investmentProjectSchema.index({ status: 1, wilaya: 1, createdAt: -1 });
 
 export const TRANSLATED_FIELDS = ['title', 'description'];
 countryPlugin(investmentProjectSchema);
+reviewPlugin(investmentProjectSchema); // edits after approval stay online, flagged for the admin
 autoTranslate(investmentProjectSchema, TRANSLATED_FIELDS);
 
 const InvestmentProject = mongoose.model('InvestmentProject', investmentProjectSchema);

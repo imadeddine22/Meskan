@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Check, X, MapPin, Star, Clock, Eye } from 'lucide-react';
 import api, { getImageUrl } from '@/lib/api';
 
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import AdminHotelDetails from '@/components/AdminHotelDetails';
 export default function AdminApprovalsPage() {
@@ -96,10 +97,10 @@ export default function AdminApprovalsPage() {
               <div className="admin-approval-info">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <h3 className="admin-approval-name cursor-pointer hover:text-indigo-600" onClick={() => setViewingHotel(h)}>{h.name}</h3>
-                  <span className="admin-badge pending">
+                  {h.changesToReview && h.status === 'approved' ? <ChangedBadge item={h} /> : (<span className="admin-badge pending">
                     <Clock style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />
                     {t('En attente')}
-                  </span>
+                  </span>)}
                 </div>
                 <p className="admin-approval-location">
                   <MapPin /> {t(h.city)}, {t(h.wilaya)}

@@ -1,3 +1,4 @@
+import { afterOwnerEdit } from '../utils/reviewPlugin.js';
 import { meskanContact } from '../utils/meskanContact.js';
 import { parseDiscount } from '../utils/pricing.js';
 import { paging, num } from '../utils/query.js';
@@ -141,7 +142,8 @@ export const updateHouse = async (req, res, next) => {
       house.images.push(...uploaded);
     }
 
-    if (house.status === 'approved') house.status = 'pending';
+    // Owner edits: an approved house stays online and is flagged for the admin; a rejected one goes back to review
+    if (req.user.role !== 'admin') afterOwnerEdit(house);
 
     await house.save();
     res.json({ success: true, house });

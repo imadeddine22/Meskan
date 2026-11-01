@@ -2,6 +2,7 @@ import { discountPlugin } from '../utils/pricing.js';
 import mongoose from 'mongoose';
 import { autoTranslate } from '../utils/autoTranslate.js';
 import { countryPlugin } from '../utils/countryPlugin.js';
+import { reviewPlugin } from '../utils/reviewPlugin.js';
 import { policiesPlugin } from '../utils/policies.js';
 import { reelPlugin } from '../utils/reelPlugin.js';
 
@@ -78,6 +79,7 @@ houseSchema.index({ wilaya: 1, status: 1 });
 // Name/description/amenities are machine-translated into the other site languages after each save
 export const TRANSLATED_FIELDS = ['name', 'description', 'amenities'];
 countryPlugin(houseSchema);
+reviewPlugin(houseSchema); // edits after approval stay online, flagged for the admin
 reelPlugin(houseSchema);
 policiesPlugin(houseSchema);
 discountPlugin(houseSchema);

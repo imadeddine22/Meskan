@@ -13,6 +13,7 @@ import api from '@/lib/api';
 
 import { getServerURL } from '@/lib/api';
 
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
@@ -204,6 +205,7 @@ function MyHousesContent() {
                 </span>
               </div>
               <div className="p-4">
+                <ChangedBadge item={h} owner className="mb-2" />
                 <h3 className="font-bold text-gray-900">{h.name}</h3>
                 <p className="flex items-center gap-1 text-sm text-gray-500">
                   <MapPin className="h-4 w-4 text-brand-500" /> {t(h.city)}, {t(h.wilaya)}

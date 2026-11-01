@@ -1786,14 +1786,11 @@
   "Annonces vérifiées et prix au m². Meskan vous met en relation avec le vendeur et vous accompagne jusqu’à l’achat.": "Verified listings and price per m². Meskan puts you in touch with the seller and supports you until the purchase.",
   "Réservation d’hôtels": "Hotel bookings",
   "Hôtels, locations, ventes et investissement dans les 69 wilayas : choisissez ce que vous cherchez.": "Hotels, rentals, sales and investment in all 69 wilayas: pick what you are looking for.",
-  "Au jour, au mois ou à l’année": "By the day, month or year",
   "Villas, appartements, chalets": "Villas, flats, chalets",
   "Dans les 69 wilayas": "In all 69 wilayas",
   "Chambres dans toute l’Algérie": "Rooms all over Algeria",
-  "Annonces vérifiées": "Verified listings",
   "Appartements, villas, terrains, locaux": "Flats, villas, land, shops",
   "Partout en Algérie": "All over Algeria",
-  "2 % seulement si la transaction aboutit": "2% only if the deal is completed",
   "Projets et investisseurs réunis par Meskan": "Projects and investors brought together by Meskan",
   "Voir les destinations": "See destinations",
   "Mise en relation confidentielle": "Confidential introduction",
@@ -1823,5 +1820,12 @@
   "+1 % Meskan": "+1% Meskan",
   "Annonces immobilières vérifiées : appartements, villas, terrains et locaux à vendre dans les 69 wilayas. Meskan vous met en relation avec le vendeur.": "Verified property listings: apartments, villas, land and shops for sale in all 69 wilayas. Meskan puts you in touch with the seller.",
   "Villas, appartements, chalets et studios à louer à la nuit, au mois ou à l'année dans toute l'Algérie. Annonces vérifiées, paiement en DZD.": "Villas, apartments, chalets and studios to rent by the night, month or year all over Algeria. Verified listings, payment in DZD.",
-  "Terrains, locaux et projets cherchant un investisseur, et investisseurs cherchant un projet : Meskan vous met en relation dans les 69 wilayas.": "Land, shops and projects looking for an investor, and investors looking for a project: Meskan connects you across all 69 wilayas."
+  "Terrains, locaux et projets cherchant un investisseur, et investisseurs cherchant un projet : Meskan vous met en relation dans les 69 wilayas.": "Land, shops and projects looking for an investor, and investors looking for a project: Meskan connects you across all 69 wilayas.",
+  "Les 69 wilayas": "All 69 wilayas",
+  "{n} wilaya(s)": "{n} wilaya(s)",
+  "Aucune wilaya ne correspond : la recherche portera sur les communes.": "No wilaya matches: the search will look at communes.",
+  "Modifié — à vérifier": "Edited — to check",
+  "Modifiés": "Edited",
+  "Modifiées": "Edited",
+  "En ligne — modifications en cours de vérification": "Online — changes being checked"
 }

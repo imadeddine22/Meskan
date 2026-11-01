@@ -14,7 +14,8 @@ import { parseCoordinates } from '../utils/parseCoordinates.js';
 // GET /admin/hotels/pending
 export const getPendingHotels = async (req, res, next) => {
   try {
-    const hotels = await Hotel.find({ status: 'pending' })
+    // waiting for approval, or approved but edited by the owner since (still online, to check)
+    const hotels = await Hotel.find({ $or: [{ status: 'pending' }, { changesToReview: true }] })
       .populate('owner', 'fullName email phone')
       .sort({ createdAt: -1 });
     res.json({ success: true, count: hotels.length, hotels });
@@ -28,7 +29,7 @@ export const approveHotel = async (req, res, next) => {
   try {
     const hotel = await Hotel.findByIdAndUpdate(
       req.params.id,
-      { status: 'approved', rejectionReason: '' },
+      { status: 'approved', rejectionReason: '', changesToReview: false },
       { new: true }
     );
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
@@ -44,7 +45,7 @@ export const rejectHotel = async (req, res, next) => {
     const { reason } = req.body;
     const hotel = await Hotel.findByIdAndUpdate(
       req.params.id,
-      { status: 'rejected', rejectionReason: reason || '' },
+      { status: 'rejected', rejectionReason: reason || '', changesToReview: false },
       { new: true }
     );
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
@@ -234,7 +235,8 @@ export const getAllHotels = async (req, res, next) => {
   try {
     const { status, q, type } = req.query;
     const filter = {};
-    if (status) filter.status = status;
+    if (status === 'changed') filter.changesToReview = true; // approved, then edited by the owner (still online)
+    else if (status) filter.status = status;
     if (type) filter.type = type;
     if (q) filter.name = new RegExp(q, 'i');
 
@@ -366,7 +368,8 @@ export const getAllHouses = async (req, res, next) => {
   try {
     const { status, q, type } = req.query;
     const filter = {};
-    if (status) filter.status = status;
+    if (status === 'changed') filter.changesToReview = true; // approved, then edited by the owner (still online)
+    else if (status) filter.status = status;
     if (type) filter.type = type;
     Object.assign(filter, periodFilter(req.query.period));
     if (q) filter.name = new RegExp(q, 'i');
@@ -452,7 +455,7 @@ export const approveHouse = async (req, res, next) => {
   try {
     const house = await House.findByIdAndUpdate(
       req.params.id,
-      { status: 'approved', rejectionReason: '' },
+      { status: 'approved', rejectionReason: '', changesToReview: false },
       { new: true }
     );
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
@@ -468,7 +471,7 @@ export const rejectHouse = async (req, res, next) => {
     const { reason } = req.body;
     const house = await House.findByIdAndUpdate(
       req.params.id,
-      { status: 'rejected', rejectionReason: reason || '' },
+      { status: 'rejected', rejectionReason: reason || '', changesToReview: false },
       { new: true }
     );
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
@@ -496,7 +499,8 @@ export const getAllSales = async (req, res, next) => {
   try {
     const { status, q, type } = req.query;
     const filter = {};
-    if (status) filter.status = status;
+    if (status === 'changed') filter.changesToReview = true; // approved, then edited by the owner (still online)
+    else if (status) filter.status = status;
     if (type) filter.type = type;
     if (q) filter.title = new RegExp(q, 'i');
 
@@ -528,7 +532,7 @@ export const approveSale = async (req, res, next) => {
   try {
     const sale = await HouseForSale.findByIdAndUpdate(
       req.params.id,
-      { status: 'approved', rejectionReason: '' },
+      { status: 'approved', rejectionReason: '', changesToReview: false },
       { new: true }
     );
     if (!sale) return res.status(404).json({ success: false, message: 'Sale listing not found' });
@@ -544,7 +548,7 @@ export const rejectSale = async (req, res, next) => {
     const { reason } = req.body;
     const sale = await HouseForSale.findByIdAndUpdate(
       req.params.id,
-      { status: 'rejected', rejectionReason: reason || '' },
+      { status: 'rejected', rejectionReason: reason || '', changesToReview: false },
       { new: true }
     );
     if (!sale) return res.status(404).json({ success: false, message: 'Sale listing not found' });

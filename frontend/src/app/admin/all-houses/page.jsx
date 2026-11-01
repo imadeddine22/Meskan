@@ -7,6 +7,7 @@ import ImageUploader from '@/components/ImageUploader';
 import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 
+import ChangedBadge from '@/components/ChangedBadge';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
@@ -200,6 +201,7 @@ export default function AdminAllHousesPage() {
             { label: 'Toutes', value: '' },
             { label: 'Approuvé', value: 'approved' },
             { label: 'En attente', value: 'pending' },
+            { label: 'Modifiés', value: 'changed' }, // approved, then edited by the owner (still online)
             { label: 'Rejeté', value: 'rejected' },
           ].map((f) => (
             <button
@@ -324,7 +326,8 @@ export default function AdminAllHousesPage() {
                     >
                       <Eye style={{ width: 13, height: 13 }} />
                     </button>
-                    {h.status !== 'approved' && (
+                    <ChangedBadge item={h} />
+{(h.status !== 'approved' || h.changesToReview) && (
                       <button
                         onClick={() => handleStatusChange(h._id, 'approve')}
                         className="admin-btn"
@@ -778,7 +781,8 @@ export default function AdminAllHousesPage() {
 
             {/* Action Bar */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t">
-              {viewingHouse.status !== 'approved' && (
+              <ChangedBadge item={viewingHouse} />
+{(viewingHouse.status !== 'approved' || viewingHouse.changesToReview) && (
                 <button
                   onClick={() => handleStatusChange(viewingHouse._id, 'approve')}
                   className="rounded-full bg-emerald-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-emerald-700 transition"

@@ -1,3 +1,4 @@
+import { afterOwnerEdit } from '../utils/reviewPlugin.js';
 import mongoose from 'mongoose';
 import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, NO_DOCUMENT } from '../models/InvestmentProject.js';
 import InvestorInterest from '../models/InvestorInterest.js';
@@ -190,10 +191,8 @@ export const updateProject = async (req, res, next) => {
     if (newDocs.length) project.documentImages.push(...(await uploadMany(newDocs, 'dzhotels/project-documents')));
     if (project.assetType !== 'Autre bien') project.assetOther = '';
     if (project.landDocument !== 'Autre') project.documentOther = '';
-    if (!admin) {
-      project.status = 'pending';
-      project.rejectionReason = '';
-    }
+    // Owner edits: an approved project stays online and is flagged for the admin; a rejected one goes back to review
+    if (!admin) afterOwnerEdit(project);
     await project.save();
     res.json({ success: true, project });
   } catch (err) {
@@ -313,12 +312,15 @@ export const markInterestSeen = async (req, res, next) => {
 // GET /admin/projects?status=pending|approved|rejected
 export const getProjectQueue = async (req, res, next) => {
   try {
-    const status = ['approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
-    const [projects, pending] = await Promise.all([
-      InvestmentProject.find({ status }).select('+documentImages +contactPhone +contactEmail').populate('owner', 'fullName email phone').sort({ updatedAt: -1 }).lean(),
+    // ?status=changed: approved projects edited by their owner since (still online, to check)
+    const status = ['approved', 'rejected', 'changed'].includes(req.query.status) ? req.query.status : 'pending';
+    const filter = status === 'changed' ? { changesToReview: true } : { status };
+    const [projects, pending, changed] = await Promise.all([
+      InvestmentProject.find(filter).select('+documentImages +contactPhone +contactEmail').populate('owner', 'fullName email phone').sort({ updatedAt: -1 }).lean(),
       InvestmentProject.countDocuments({ status: 'pending' }),
+      InvestmentProject.countDocuments({ changesToReview: true }),
     ]);
-    res.json({ success: true, pending, projects });
+    res.json({ success: true, pending, changed, projects });
   } catch (err) {
     next(err);
   }
@@ -327,7 +329,7 @@ export const getProjectQueue = async (req, res, next) => {
 // PUT /admin/projects/:id/approve
 export const approveProject = async (req, res, next) => {
   try {
-    const project = await InvestmentProject.findByIdAndUpdate(req.params.id, { status: 'approved', rejectionReason: '' }, { new: true }).populate('owner', 'email fullName');
+    const project = await InvestmentProject.findByIdAndUpdate(req.params.id, { status: 'approved', rejectionReason: '', changesToReview: false }, { new: true }).populate('owner', 'email fullName');
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
     notify(
       project.owner?.email,
@@ -345,7 +347,7 @@ export const rejectProject = async (req, res, next) => {
   try {
     const reason = String(req.body?.reason || '').replace(/\s+/g, ' ').trim().slice(0, 300);
     if (reason.length < 3) return res.status(400).json({ success: false, message: 'Give the reason for the rejection' });
-    const project = await InvestmentProject.findByIdAndUpdate(req.params.id, { status: 'rejected', rejectionReason: reason }, { new: true }).populate('owner', 'email fullName');
+    const project = await InvestmentProject.findByIdAndUpdate(req.params.id, { status: 'rejected', rejectionReason: reason, changesToReview: false }, { new: true }).populate('owner', 'email fullName');
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
     notify(
       project.owner?.email,

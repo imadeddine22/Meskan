@@ -1,3 +1,4 @@
+import { afterOwnerEdit } from '../utils/reviewPlugin.js';
 import { effectivePrice } from '../utils/pricing.js';
 import { paging, num } from '../utils/query.js';
 import { parsePolicies } from '../utils/policies.js';
@@ -177,8 +178,8 @@ export const updateHotel = async (req, res, next) => {
       hotel.images.push(...uploaded);
     }
 
-    // Editing puts an approved hotel back to pending for re-review
-    if (hotel.status === 'approved') hotel.status = 'pending';
+    // Owner edits: an approved hotel stays online and is flagged for the admin; a rejected one goes back to review
+    if (req.user.role !== 'admin') afterOwnerEdit(hotel);
 
     await hotel.save();
     res.json({ success: true, hotel });
