@@ -8,10 +8,10 @@ import { useT } from '@/lib/i18n/useT';
 // What visitors can do on Meskan: each photo card opens its page.
 // Photos: the site owner's own (public/images/home)
 const CARDS = [
-  { href: '/sales', photo: '/images/home/house-for-sale.jpg', badge: 'Annonces vérifiées', title: 'Biens immobiliers à vendre', sub: 'Appartements, villas, terrains, locaux', foot: 'Partout en Algérie', footIcon: MapPin },
-  { href: '/houses', photo: '/images/home/rental-living-room.jpg', badge: 'Au jour, au mois ou à l’année', title: 'Maisons à louer', sub: 'Villas, appartements, chalets', foot: 'Dans les 69 wilayas', footIcon: MapPin },
-  { href: '/hotels', photo: '/images/home/hotel-pool.jpg', badge: 'Paiement sur place', title: 'Réservation d’hôtels', sub: 'Chambres dans toute l’Algérie', foot: 'Dans les 69 wilayas', footIcon: MapPin },
-  { href: '/investir', photo: '/images/home/investment-field.jpg', badge: '2 % seulement si la transaction aboutit', title: 'Investissement', sub: 'Projets et investisseurs réunis par Meskan', foot: 'Mise en relation confidentielle', footIcon: Handshake },
+  { href: '/sales', photo: '/images/home/house-for-sale.jpg', title: 'Biens immobiliers à vendre', sub: 'Appartements, villas, terrains, locaux', foot: 'Partout en Algérie', footIcon: MapPin },
+  { href: '/houses', photo: '/images/home/rental-living-room.jpg', title: 'Maisons à louer', sub: 'Villas, appartements, chalets', foot: 'Dans les 69 wilayas', footIcon: MapPin },
+  { href: '/hotels', photo: '/images/home/hotel-pool.jpg', title: 'Réservation d’hôtels', sub: 'Chambres dans toute l’Algérie', foot: 'Dans les 69 wilayas', footIcon: MapPin },
+  { href: '/investir', photo: '/images/home/investment-field.jpg', title: 'Investissement', sub: 'Projets et investisseurs réunis par Meskan', foot: 'Mise en relation confidentielle', footIcon: Handshake },
 ];
 
 /**
@@ -60,7 +60,7 @@ export default function CategoryCards() {
         </div>
 
         <ul ref={row} onScroll={measure} className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-1">
-          {CARDS.map(({ href, photo, badge, title, sub, foot, footIcon: FootIcon }) => (
+          {CARDS.map(({ href, photo, title, sub, foot, footIcon: FootIcon }) => (
             <li key={href} className="w-[78%] shrink-0 snap-start sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]">
               <Link
                 href={href}
@@ -69,9 +69,6 @@ export default function CategoryCards() {
                 <img src={photo} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                 {/* readable text over any photo */}
                 <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#0B1622]/90 via-[#0B1622]/25 to-transparent" />
-                <span className="absolute end-3 top-3 max-w-[85%] rounded-full bg-white/85 px-3 py-1 text-[11px] font-bold text-[#152A41] backdrop-blur">
-                  {t(badge)}
-                </span>
                 <span className="absolute inset-x-0 bottom-0 p-5 text-white">
                   <span className="block text-xl font-black leading-tight">{t(title)}</span>
                   <span className="mt-1 block text-sm text-white/85">{t(sub)}</span>
