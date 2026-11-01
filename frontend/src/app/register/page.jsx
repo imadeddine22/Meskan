@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
-    phone: '',
     password: '',
     role: 'customer',
   });
@@ -72,7 +71,6 @@ export default function RegisterPage() {
         <form onSubmit={submit} className="space-y-4">
           <Field label={t('Nom complet')} value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
           <Field label={t('Email')} type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label={t('Téléphone')} type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required={false} />
           <Field label={t('Mot de passe')} type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
           <button
             disabled={loading}
@@ -93,7 +91,7 @@ export default function RegisterPage() {
   );
 }
 
-const AUTOCOMPLETE = { email: 'email', password: 'new-password', tel: 'tel' };
+const AUTOCOMPLETE = { email: 'email', password: 'new-password' };
 
 function Field({ label, value, onChange, type = 'text', required = true }) {
   const id = useId();
