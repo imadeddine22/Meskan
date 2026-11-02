@@ -24,6 +24,8 @@ export default function HomePage() {
   const [place, setPlaceRaw] = useState('');
   // 'tlemcen' / 'Bejaia' → official spelling ('Tlemcen', 'Béjaïa'); communes are kept as typed
   const setPlace = (v) => setPlaceRaw(findWilaya(v)?.name || v);
+  // Wilaya picked in the "explore by wilaya" row: filters the home sections without changing the layout
+  const [pick, setPick] = useState('');
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -58,10 +60,12 @@ export default function HomePage() {
           <CategoryCards />
           <FeaturedHotels />
           <ReelsTeaser />
-          <CitiesSection selectedCity={place} onSelectCity={setPlace} />
-          <FeaturedHouses selectedCity={place} />
-          <FeaturedSales selectedCity={place} />
-          <HotelsList selectedCity={place} onSelectCity={setPlace} />
+          {/* a wilaya picked in the row filters the sections below in place (same layout, no jump) */}
+          <CitiesSection selectedCity={pick} onSelectCity={setPick} />
+          <FeaturedHouses selectedCity={pick} />
+          <FeaturedSales selectedCity={pick} />
+          <PlaceProjects selectedCity={pick} />
+          <HotelsList selectedCity={pick} onSelectCity={setPick} />
         </>
       )}
 

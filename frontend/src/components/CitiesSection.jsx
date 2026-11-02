@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapPin, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import api from '@/lib/api';
 import { WILAYA_LIST } from '@/lib/wilayas';
 import { wilayaPhoto } from '@/lib/wilayaPhotos';
@@ -67,7 +67,17 @@ export default function CitiesSection({ selectedCity, onSelectCity }) {
             <p className="text-sm text-gray-500">{t('Les 69 wilayas : hôtels, locations, biens à vendre et projets de chacune')}</p>
           </div>
         </div>
-        <label className="relative w-full sm:w-72">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        {selectedCity && (
+          <button
+            type="button"
+            onClick={() => onSelectCity?.('')}
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow hover:bg-brand-700"
+          >
+            <X className="h-4 w-4" aria-hidden="true" /> {t('Toutes les wilayas')}
+          </button>
+        )}
+        <label className="relative w-full flex-1 sm:w-72">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
           <input
             type="search"
@@ -78,6 +88,7 @@ export default function CitiesSection({ selectedCity, onSelectCity }) {
             className="w-full rounded-full border border-gray-200 bg-white py-2.5 pe-4 ps-9 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
           />
         </label>
+        </div>
       </div>
 
       {shown.length === 0 ? (
