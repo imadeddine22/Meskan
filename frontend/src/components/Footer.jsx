@@ -45,6 +45,7 @@ const COLUMNS = [
       ['/contact', 'Aide et contact'],
       ['/outils', 'Outils gratuits'],
       ['/comparatif', 'Meskan vs Booking, Airbnb, Ouedkniss'],
+      ['/credits-photos', 'Crédits photos'],
     ],
   },
 ];

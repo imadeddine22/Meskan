@@ -48,7 +48,7 @@ export default function HomePage() {
           <HotelsList selectedCity={place} onSelectCity={setPlace} />
           <FeaturedHouses selectedCity={place} />
           <FeaturedSales selectedCity={place} />
-          <CitiesSection selectedCity={place} onSelectCity={setPlace} />
+          <CitiesSection />
         </>
       ) : (
         <>
@@ -56,7 +56,7 @@ export default function HomePage() {
           <CategoryCards />
           <FeaturedHotels />
           <ReelsTeaser />
-          <CitiesSection selectedCity={place} onSelectCity={setPlace} />
+          <CitiesSection />
           <FeaturedHouses selectedCity={place} />
           <FeaturedSales selectedCity={place} />
           <HotelsList selectedCity={place} onSelectCity={setPlace} />

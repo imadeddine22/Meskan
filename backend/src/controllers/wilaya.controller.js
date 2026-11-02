@@ -1,6 +1,8 @@
 import Wilaya from '../models/Wilaya.js';
 import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
+import HouseForSale from '../models/HouseForSale.js';
+import InvestmentProject from '../models/InvestmentProject.js';
 import { getCommunes } from '../utils/communes.js';
 import { exactRegex } from '../utils/searchRegex.js';
 
@@ -28,6 +30,23 @@ export const getPopularWilayas = async (req, res, next) => {
       .slice(0, limit);
     res.set('Cache-Control', 'public, max-age=600');
     res.json({ success: true, wilayas });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /wilayas/counts — what is published in each wilaya (home page cards):
+// { counts: { Oran: { hotels, houses, sales, projects }, … } } — approved listings only
+export const getWilayaCounts = async (req, res, next) => {
+  try {
+    const group = [{ $match: { status: 'approved', wilaya: { $type: 'string', $ne: '' } } }, { $group: { _id: '$wilaya', n: { $sum: 1 } } }];
+    const [hotels, houses, sales, projects] = await Promise.all([Hotel, House, HouseForSale, InvestmentProject].map((M) => M.aggregate(group)));
+    const counts = {};
+    for (const [key, rows] of Object.entries({ hotels, houses, sales, projects })) {
+      for (const { _id, n } of rows) (counts[_id] ||= { hotels: 0, houses: 0, sales: 0, projects: 0 })[key] = n;
+    }
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json({ success: true, counts });
   } catch (error) {
     next(error);
   }

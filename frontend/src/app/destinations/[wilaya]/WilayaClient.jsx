@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, Hotel, Home, MapPin, ArrowLeft, Loader2 } from 'lucide-react';
+import { Search, SlidersHorizontal, Hotel, Home, MapPin, ArrowLeft, Loader2, Tag, Landmark } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HotelCard from '@/components/HotelCard';
 import HouseCard from '@/components/HouseCard';
+import SaleListingCard from '@/components/SaleListingCard';
+import ProjectCard from '@/components/ProjectCard';
 import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
@@ -18,8 +20,10 @@ export default function WilayaClient({ wilayaName, children }) {
 
   const [hotels, setHotels] = useState([]);
   const [houses, setHouses] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('all'); // all | hotels | houses
+  const [tab, setTab] = useState('all'); // all | hotels | houses | sales | projects
   const [typeFilter, setTypeFilter] = useState('');
   const [searchQ, setSearchQ] = useState('');
 
@@ -28,15 +32,23 @@ export default function WilayaClient({ wilayaName, children }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [hotelsRes, housesRes] = await Promise.all([
+        // everything published in this wilaya: hotels, rentals, sales, and investment projects (both kinds)
+        const [hotelsRes, housesRes, salesRes, assetsRes, capitalRes] = await Promise.all([
           api.get('/hotels', { params: { wilaya: wilayaName, limit: 50 } }).catch(() => ({ data: { hotels: [] } })),
           api.get('/houses', { params: { wilaya: wilayaName, limit: 50 } }).catch(() => ({ data: { houses: [] } })),
+          api.get('/sales', { params: { wilaya: wilayaName, limit: 50 } }).catch(() => ({ data: { listings: [] } })),
+          api.get('/projects', { params: { wilaya: wilayaName, limit: 50 } }).catch(() => ({ data: { projects: [] } })),
+          api.get('/projects', { params: { wilaya: wilayaName, kind: 'capital', limit: 50 } }).catch(() => ({ data: { projects: [] } })),
         ]);
         setHotels(hotelsRes.data.hotels || []);
         setHouses(housesRes.data.houses || []);
+        setSales(salesRes.data.listings || []);
+        setProjects([...(assetsRes.data.projects || []), ...(capitalRes.data.projects || [])]);
       } catch {
         setHotels([]);
         setHouses([]);
+        setSales([]);
+        setProjects([]);
       } finally {
         setLoading(false);
       }
@@ -74,6 +86,7 @@ export default function WilayaClient({ wilayaName, children }) {
     bathrooms: h.bathrooms,
     capacity: h.capacity,
     pricePerNight: h.pricePerNight ?? h.price ?? 0,
+    rentalPeriod: h.rentalPeriod, pricePerMonth: h.pricePerMonth, pricePerYear: h.pricePerYear,
     discountPercent: h.discountPercent || 0, discountUntil: h.discountUntil || null, avgRating: h.avgRating || 0, reviewsCount: h.reviewsCount || 0,
     currency: h.currency || 'DZD',
   policies: h.policies,
@@ -88,8 +101,9 @@ export default function WilayaClient({ wilayaName, children }) {
   }, [tab]);
 
   // Filtered results
+  const only = (k) => tab !== 'all' && tab !== k; // another tab is selected
   const filteredHotels = useMemo(() => {
-    if (tab === 'houses') return [];
+    if (only('hotels')) return [];
     let list = hotels;
     if (typeFilter) list = list.filter((h) => h.type === typeFilter);
     if (searchQ) list = list.filter((h) => h.name.toLowerCase().includes(searchQ.toLowerCase()));
@@ -97,14 +111,18 @@ export default function WilayaClient({ wilayaName, children }) {
   }, [hotels, tab, typeFilter, searchQ]);
 
   const filteredHouses = useMemo(() => {
-    if (tab === 'hotels') return [];
+    if (only('houses')) return [];
     let list = houses;
     if (typeFilter) list = list.filter((h) => h.type === typeFilter);
     if (searchQ) list = list.filter((h) => h.name.toLowerCase().includes(searchQ.toLowerCase()));
     return list;
   }, [houses, tab, typeFilter, searchQ]);
 
-  const totalResults = filteredHotels.length + filteredHouses.length;
+  const q = searchQ.toLowerCase();
+  const filteredSales = useMemo(() => (only('sales') || typeFilter ? [] : sales.filter((l) => !q || l.title?.toLowerCase().includes(q))), [sales, tab, typeFilter, q]);
+  const filteredProjects = useMemo(() => (only('projects') || typeFilter ? [] : projects.filter((p) => !q || p.title?.toLowerCase().includes(q))), [projects, tab, typeFilter, q]);
+
+  const totalResults = filteredHotels.length + filteredHouses.length + filteredSales.length + filteredProjects.length;
 
   return (
     <main style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -152,7 +170,7 @@ export default function WilayaClient({ wilayaName, children }) {
                 {t(wilayaName)}
               </h1>
               <p style={{ color: '#cffafe', fontSize: 14, marginTop: 4 }}>
-                {loading ? t('Chargement...') : t('{h} hôtel(s) · {m} maison(s)', { h: hotels.length, m: houses.length })}
+                {loading ? t('Chargement...') : t('{h} hôtel(s) · {m} maison(s) · {s} bien(s) à vendre · {p} projet(s)', { h: hotels.length, m: houses.length, s: sales.length, p: projects.length })}
               </p>
             </div>
           </div>
@@ -187,9 +205,11 @@ export default function WilayaClient({ wilayaName, children }) {
         {/* Tabs: Tous / Hôtels / Maisons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           {[
-            { key: 'all', label: 'Tous', icon: null, count: hotels.length + houses.length },
+            { key: 'all', label: 'Tous', icon: null, count: hotels.length + houses.length + sales.length + projects.length },
             { key: 'hotels', label: 'Hôtels', icon: Hotel, count: hotels.length },
-            { key: 'houses', label: 'Maisons', icon: Home, count: houses.length },
+            { key: 'houses', label: 'Locations', icon: Home, count: houses.length },
+            { key: 'sales', label: 'Ventes', icon: Tag, count: sales.length },
+            { key: 'projects', label: 'Investissement', icon: Landmark, count: projects.length },
           ].map(({ key, label, icon: Icon, count }) => (
             <button
               key={key}
@@ -205,7 +225,7 @@ export default function WilayaClient({ wilayaName, children }) {
               }}
             >
               {Icon && <Icon size={15} />}
-              {label}
+              {t(label)}
               <span
                 style={{
                   fontSize: 12, fontWeight: 700,
@@ -220,8 +240,8 @@ export default function WilayaClient({ wilayaName, children }) {
           ))}
         </div>
 
-        {/* Type filters */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }} className="no-scrollbar">
+        {/* Type filters (hotels and houses) */}
+        {!['sales', 'projects'].includes(tab) && <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }} className="no-scrollbar">
           <SlidersHorizontal size={16} color="#94a3b8" style={{ flexShrink: 0 }} />
           <button
             onClick={() => setTypeFilter('')}
@@ -250,7 +270,7 @@ export default function WilayaClient({ wilayaName, children }) {
               {t(type)}
             </button>
           ))}
-        </div>
+        </div>}
 
         {/* Results count */}
         <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>
@@ -328,6 +348,38 @@ export default function WilayaClient({ wilayaName, children }) {
                   {filteredHouses.map((h) => (
                     <HouseCard key={h._id || h.id} house={normalizeHouse(h)} />
                   ))}
+                </div>
+              </div>
+            )}
+            {filteredSales.length > 0 && (
+              <div style={{ marginTop: 40 }}>
+                {tab === 'all' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                    <Tag size={18} color="#06b6d4" />
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>
+                      {t('Biens à vendre')}
+                      <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 14, marginLeft: 8 }}>({filteredSales.length})</span>
+                    </h3>
+                  </div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                  {filteredSales.map((x) => <SaleListingCard key={x._id} listing={x} />)}
+                </div>
+              </div>
+            )}
+            {filteredProjects.length > 0 && (
+              <div style={{ marginTop: 40 }}>
+                {tab === 'all' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                    <Landmark size={18} color="#06b6d4" />
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>
+                      {t('Projets d’investissement')}
+                      <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 14, marginLeft: 8 }}>({filteredProjects.length})</span>
+                    </h3>
+                  </div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                  {filteredProjects.map((x) => <ProjectCard key={x._id} project={x} />)}
                 </div>
               </div>
             )}
