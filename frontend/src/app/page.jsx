@@ -11,14 +11,15 @@ import FeaturedHouses from '@/components/FeaturedHouses';
 import FeaturedSales from '@/components/FeaturedSales';
 import CitiesSection from '@/components/CitiesSection';
 import HotelsList from '@/components/HotelsList';
+import PlaceProjects from '@/components/PlaceProjects';
 import HomeDetailsSection from '@/components/HomeDetailsSection';
 import InvestTeaser from '@/components/InvestTeaser';
 import Footer from '@/components/Footer';
-import { findWilaya } from '@/hooks/useCommunes';
+import { findWilaya, placeName } from '@/hooks/useCommunes';
 
 import { useT } from '@/lib/i18n/useT';
 export default function HomePage() {
-  const { t } = useT();
+  const { t, lang } = useT();
   // Wilaya or commune typed in the hero search / picked in the city cards
   const [place, setPlaceRaw] = useState('');
   // 'tlemcen' / 'Bejaia' → official spelling ('Tlemcen', 'Béjaïa'); communes are kept as typed
@@ -35,7 +36,7 @@ export default function HomePage() {
           <div id="search-results" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-4 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-white px-5 py-4 shadow-sm" aria-live="polite">
               <p className="text-sm text-gray-600">
-                {t('Résultats pour')} <strong className="text-ink">« {place} »</strong> {t(': hôtels, maisons à louer et biens à vendre.')}
+                {t('Résultats pour')} <strong className="text-ink">« {placeName(place, lang)} »</strong> {t(': hôtels, maisons à louer, biens à vendre et projets.')}
               </p>
               <button
                 onClick={() => setPlace('')}
@@ -45,10 +46,11 @@ export default function HomePage() {
               </button>
             </div>
           </div>
+          <CitiesSection selectedCity={place} onSelectCity={setPlace} />
           <HotelsList selectedCity={place} onSelectCity={setPlace} />
           <FeaturedHouses selectedCity={place} />
           <FeaturedSales selectedCity={place} />
-          <CitiesSection />
+          <PlaceProjects selectedCity={place} />
         </>
       ) : (
         <>
@@ -56,7 +58,7 @@ export default function HomePage() {
           <CategoryCards />
           <FeaturedHotels />
           <ReelsTeaser />
-          <CitiesSection />
+          <CitiesSection selectedCity={place} onSelectCity={setPlace} />
           <FeaturedHouses selectedCity={place} />
           <FeaturedSales selectedCity={place} />
           <HotelsList selectedCity={place} onSelectCity={setPlace} />

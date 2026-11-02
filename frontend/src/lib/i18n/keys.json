@@ -1069,5 +1069,7 @@
   "Les 69 wilayas : hôtels, locations, biens à vendre et projets de chacune",
   "Chercher une wilaya (nom ou code)",
   "Aucune wilaya ne correspond à « {q} »",
-  "Voir toutes les wilayas ({n})"
+  "Voir toutes les wilayas ({n})",
+  ": hôtels, maisons à louer, biens à vendre et projets.",
+  "Aucun hôtel pour « {wilaya} » pour le moment."
 ]

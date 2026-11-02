@@ -2,17 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapPin, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import Link from '@/components/LocaleLink';
 import api from '@/lib/api';
 import { WILAYA_LIST } from '@/lib/wilayas';
 import { wilayaPhoto } from '@/lib/wilayaPhotos';
-import { wilayaPath } from '@/lib/wilayaInfo';
 import { useT } from '@/lib/i18n/useT';
 
 const norm = (s = '') => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-/** All 69 wilayas, each with its photo and what is published there; a card opens the wilaya page (hotels, rentals, sales, projects). */
-export default function CitiesSection() {
+/** All 69 wilayas in one row, each with its photo and what is published there; picking one shows its hotels, rentals, sales and projects right on the home page. */
+export default function CitiesSection({ selectedCity, onSelectCity }) {
   const { t, lang } = useT();
   const [counts, setCounts] = useState({});
   const row = useRef(null);
@@ -31,6 +29,20 @@ export default function CitiesSection() {
   // one row: the arrows slide it by about one screen width (physical left / right, in Arabic too)
   const slide = (dir) => row.current?.scrollBy({ left: dir * row.current.clientWidth * 0.85, behavior: 'smooth' });
   useEffect(() => { row.current?.scrollTo({ left: 0 }); }, [q]);
+  // keep the chosen wilaya centred in the row (scrolls the row only, not the page)
+  useEffect(() => {
+    const el = row.current;
+    const card = el?.querySelector('[aria-pressed="true"]');
+    if (!card) return;
+    const r = el.getBoundingClientRect();
+    const c = card.getBoundingClientRect();
+    el.scrollBy({ left: c.left + c.width / 2 - (r.left + r.width / 2) });
+  }, [selectedCity]);
+
+  const pick = (name) => {
+    onSelectCity?.(selectedCity === name ? '' : name);
+    requestAnimationFrame(() => document.getElementById('search-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
 
   const summary = (c) => {
     if (!c) return t('Bientôt des annonces');
@@ -87,10 +99,12 @@ export default function CitiesSection() {
           {shown.map((w) => {
             const c = counts[w.name];
             return (
-              <Link
+              <button
                 key={w.code}
-                href={wilayaPath(w.name)}
-                className="group relative h-44 w-40 shrink-0 snap-start overflow-hidden rounded-2xl shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:w-48 lg:w-[calc((100%-5*1rem)/6)]"
+                type="button"
+                onClick={() => pick(w.name)}
+                aria-pressed={selectedCity === w.name}
+                className={`group relative h-44 w-40 shrink-0 snap-start overflow-hidden rounded-2xl text-start shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:w-48 lg:w-[calc((100%-5*1rem)/6)] ${selectedCity === w.name ? 'ring-4 ring-brand-500 ring-offset-2' : ''}`}
               >
                 <img src={wilayaPhoto(w.code)} alt={lang === 'ar' ? w.arabic : w.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -99,7 +113,7 @@ export default function CitiesSection() {
                   <h3 className="text-base font-bold leading-tight text-white sm:text-lg">{lang === 'ar' ? w.arabic : w.name}</h3>
                   <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-gray-200 sm:text-xs">{summary(c)}</p>
                 </div>
-              </Link>
+              </button>
             );
           })}
         </div>

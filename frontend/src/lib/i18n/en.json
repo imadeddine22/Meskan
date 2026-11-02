@@ -1839,5 +1839,7 @@
   "Les 69 wilayas : hôtels, locations, biens à vendre et projets de chacune": "All 69 wilayas: hotels, rentals, properties for sale and projects in each",
   "Chercher une wilaya (nom ou code)": "Find a wilaya (name or code)",
   "Aucune wilaya ne correspond à « {q} »": "No wilaya matches “{q}”",
-  "Voir toutes les wilayas ({n})": "Show all wilayas ({n})"
+  "Voir toutes les wilayas ({n})": "Show all wilayas ({n})",
+  ": hôtels, maisons à louer, biens à vendre et projets.": ": hotels, houses for rent, properties for sale and projects.",
+  "Aucun hôtel pour « {wilaya} » pour le moment.": "No hotels in “{wilaya}” yet."
 }

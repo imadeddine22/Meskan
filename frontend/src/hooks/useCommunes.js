@@ -12,6 +12,9 @@ export const findWilaya = (name) => {
   return WILAYA_LIST.find((w) => norm(w.name) === n || norm(w.ascii) === n || w.arabic === String(name).trim());
 };
 
+/** A wilaya's name in the visitor's language ('Oran' → 'وهران' in Arabic); communes and other places are kept as typed. */
+export const placeName = (place, lang) => (lang === 'ar' && findWilaya(place)?.arabic) || place;
+
 /** Communes of the given wilaya (by French, ASCII or Arabic name): [{ name, arabic }]. */
 export function useCommunes(wilayaName) {
   const [communes, setCommunes] = useState([]);

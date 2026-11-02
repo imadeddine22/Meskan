@@ -7,6 +7,7 @@ import api, { getImageUrl } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
 import { formatDZD } from '@/lib/data';
+import { placeName } from '@/hooks/useCommunes';
 
 
 export default function FeaturedSales({ selectedCity }) {
@@ -156,7 +157,7 @@ export default function FeaturedSales({ selectedCity }) {
             })
           ) : (
             <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>
-              {t('Aucun bien à vendre pour « {selectedCity} » pour le moment.', { selectedCity })}
+              {t('Aucun bien à vendre pour « {selectedCity} » pour le moment.', { selectedCity: placeName(selectedCity, lang) })}
             </p>
           )}
         </div>

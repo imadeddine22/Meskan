@@ -1844,5 +1844,7 @@
   "Les 69 wilayas : hôtels, locations, biens à vendre et projets de chacune": "الولايات الـ69: الفنادق والكراء والعقارات للبيع والمشاريع في كل ولاية",
   "Chercher une wilaya (nom ou code)": "ابحث عن ولاية (الاسم أو الرقم)",
   "Aucune wilaya ne correspond à « {q} »": "لا توجد ولاية تطابق «{q}»",
-  "Voir toutes les wilayas ({n})": "عرض كل الولايات ({n})"
+  "Voir toutes les wilayas ({n})": "عرض كل الولايات ({n})",
+  ": hôtels, maisons à louer, biens à vendre et projets.": ": الفنادق والمنازل للكراء والعقارات للبيع والمشاريع.",
+  "Aucun hôtel pour « {wilaya} » pour le moment.": "لا توجد فنادق في «{wilaya}» حاليًا."
 }
