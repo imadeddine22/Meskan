@@ -214,7 +214,7 @@ export default function Hero({ value = '', onSearch }) {
           </div>
 
           {/* All 69 wilayas in a wide panel under the field (the browser's own list showed ~5 at a time):
-              the whole width of the search box, in columns, filtered as the visitor types */}
+              the whole width of the search box, one per line, filtered as the visitor types */}
           {listOpen && (
             <div
               id="hero-wilayas"
@@ -231,7 +231,7 @@ export default function Hero({ value = '', onSearch }) {
                 </button>
               </div>
               {matches.length ? (
-                <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <ul className="divide-y divide-gray-50">{/* one wilaya per line */}
                   {matches.map((w) => (
                     <li key={w.code}>
                       <button
@@ -239,7 +239,7 @@ export default function Hero({ value = '', onSearch }) {
                         role="option"
                         aria-selected={value === w.name}
                         onClick={() => pickWilaya(w)}
-                        className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-start text-sm font-semibold transition ${
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-semibold transition ${
                           value === w.name ? 'bg-brand-50 text-brand-600' : 'text-gray-700 hover:bg-gray-50'
                         }`}
                       >
