@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { MapPin, Search, ChevronDown } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { MapPin, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import api from '@/lib/api';
 import { WILAYA_LIST } from '@/lib/wilayas';
@@ -9,14 +9,13 @@ import { wilayaPhoto } from '@/lib/wilayaPhotos';
 import { wilayaPath } from '@/lib/wilayaInfo';
 import { useT } from '@/lib/i18n/useT';
 
-const FIRST = 12; // cards shown before "all wilayas"
 const norm = (s = '') => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 /** All 69 wilayas, each with its photo and what is published there; a card opens the wilaya page (hotels, rentals, sales, projects). */
 export default function CitiesSection() {
   const { t, lang } = useT();
   const [counts, setCounts] = useState({});
-  const [showAll, setShowAll] = useState(false);
+  const row = useRef(null);
   const [q, setQ] = useState('');
 
   useEffect(() => {
@@ -28,7 +27,10 @@ export default function CitiesSection() {
     if (!n) return WILAYA_LIST;
     return WILAYA_LIST.filter((w) => norm(w.name).includes(n) || norm(w.ascii).includes(n) || w.arabic.includes(q.trim()) || String(w.code) === n || String(w.code).padStart(2, '0') === n);
   }, [q]);
-  const shown = showAll || q ? list : list.slice(0, FIRST);
+  const shown = list;
+  // one row: the arrows slide it by about one screen width (physical left / right, in Arabic too)
+  const slide = (dir) => row.current?.scrollBy({ left: dir * row.current.clientWidth * 0.85, behavior: 'smooth' });
+  useEffect(() => { row.current?.scrollTo({ left: 0 }); }, [q]);
 
   const summary = (c) => {
     if (!c) return t('Bientôt des annonces');
@@ -69,14 +71,26 @@ export default function CitiesSection() {
       {shown.length === 0 ? (
         <p className="py-10 text-center text-gray-500">{t('Aucune wilaya ne correspond à « {q} »', { q })}</p>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+        <div className="relative">
+          {shown.length > 2 && [[-1, ChevronLeft, 'left-0'], [1, ChevronRight, 'right-0']].map(([dir, Icon, side]) => (
+            <button
+              key={dir}
+              type="button"
+              onClick={() => slide(dir)}
+              aria-label={dir < 0 ? t('Précédent') : t('Suivant')}
+              className={`absolute ${side} top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-lg ring-1 ring-black/5 transition hover:bg-brand-50 hover:text-brand-600 sm:h-11 sm:w-11`}
+            >
+              <Icon className="h-5 w-5" aria-hidden="true" />
+            </button>
+          ))}
+        <div ref={row} className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-1 py-2 sm:gap-4">
           {shown.map((w) => {
             const c = counts[w.name];
             return (
               <Link
                 key={w.code}
                 href={wilayaPath(w.name)}
-                className="group relative h-40 overflow-hidden rounded-2xl shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:h-44"
+                className="group relative h-44 w-40 shrink-0 snap-start overflow-hidden rounded-2xl shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:w-48 lg:w-[calc((100%-5*1rem)/6)]"
               >
                 <img src={wilayaPhoto(w.code)} alt={lang === 'ar' ? w.arabic : w.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -89,20 +103,9 @@ export default function CitiesSection() {
             );
           })}
         </div>
-      )}
-
-      {!q && !showAll && list.length > FIRST && (
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow transition hover:bg-brand-700"
-          >
-            {t('Voir toutes les wilayas ({n})', { n: list.length })}
-            <ChevronDown className="h-4 w-4" aria-hidden="true" />
-          </button>
         </div>
       )}
+
     </section>
   );
 }
