@@ -27,7 +27,7 @@ const COLUMNS = [
       ['/my-bookings', 'Mes réservations'],
       ['/messages', 'Messages'],
       ['/favorites', 'Favoris'],
-      ['/profile', 'Mon profil'],
+      ['/profile', 'Mes informations personnelles'],
       ['/investor/projects', 'Mes projets'],
     ],
   },
@@ -45,6 +45,7 @@ const COLUMNS = [
       ['/contact', 'Aide et contact'],
       ['/outils', 'Outils gratuits'],
       ['/comparatif', 'Meskan vs Booking, Airbnb, Ouedkniss'],
+      ['/credits-photos', 'Crédits photos'],
     ],
   },
 ];

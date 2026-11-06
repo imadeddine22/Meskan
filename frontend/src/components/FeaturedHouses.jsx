@@ -9,6 +9,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 
 import { getServerURL } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
+import { placeName } from '@/hooks/useCommunes';
 import { formatDZD } from '@/lib/data';
 
 const SERVER = getServerURL();
@@ -163,7 +164,7 @@ export default function FeaturedHouses({ selectedCity }) {
               );
             })
           ) : (
-            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>{t('Aucune maison à louer pour «')} {selectedCity} {t('» pour le moment.')}</p>
+            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>{t('Aucune maison à louer pour «')} {placeName(selectedCity, lang)} {t('» pour le moment.')}</p>
           )}
         </div>
 

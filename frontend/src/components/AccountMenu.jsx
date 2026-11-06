@@ -31,7 +31,7 @@ export default function AccountMenu() {
   if (!user) return null;
   const links = [
     { href: spaceHome(user.role), label: 'Ouvrir mon espace', icon: LayoutDashboard },
-    { href: '/profile', label: 'Mon profil', icon: UserCircle },
+    { href: '/profile', label: 'Mes informations personnelles', icon: UserCircle },
     { href: '/my-bookings', label: 'Mes réservations', icon: CalendarCheck },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/pricing', label: 'Tarifs et abonnements', icon: BadgeDollarSign },

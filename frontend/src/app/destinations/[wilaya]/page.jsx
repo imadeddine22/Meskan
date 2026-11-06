@@ -58,8 +58,8 @@ function buildFaqs(name, info, s) {
       q: msg('Peut-on acheter un bien immobilier à {name} via Meskan ?', { name }),
       a: s.sales
         ? s.medianSale
-          ? msg('Oui, {n} bien(s) à vendre publié(s) à {name}, pour un prix médian de {price}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name, price: formatDZD(s.medianSale) })
-          : msg('Oui, {n} bien(s) à vendre publié(s) à {name}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name })
+          ? msg('Oui, {n} bien(s) à vendre publié(s) à {name}, pour un prix médian de {price}. Chaque annonce est validée par notre équipe et Meskan vous met en relation avec le vendeur.', { n: s.sales, name, price: formatDZD(s.medianSale) })
+          : msg('Oui, {n} bien(s) à vendre publié(s) à {name}. Chaque annonce est validée par notre équipe et Meskan vous met en relation avec le vendeur.', { n: s.sales, name })
         : msg("Aucun bien n'est actuellement en vente à {name}. Les vendeurs peuvent publier une annonce après inscription sur Meskan.", { name }),
     },
   ];

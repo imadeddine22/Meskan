@@ -1087,7 +1087,7 @@ describe('Investment projects (land or property looking for an investor)');
   expectStatus('area is required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, area: '' } }), 400);
   expectStatus('unknown project type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, projectType: 'Casino' } }), 400);
   expectStatus('unknown property type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Bateau' } }), 400);
-  expectStatus('photo of the ownership document required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG] } }), 400);
+  check('no photo of the ownership document needed (only its type)', (await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG] } })).status === 201);
   expectStatus('at most 2 document photos', await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG], documents: [PNG, PNG, PNG] } }), 400);
   const regularising = await req('POST', '/projects', { token: landOwner.token, form: { ...base, landDocument: 'En cours de régularisation', images: [PNG] } });
   check('papers being regularised: no document photo needed', regularising.status === 201, String(regularising.status));
@@ -1116,8 +1116,6 @@ describe('Investment projects (land or property looking for an investor)');
   check('document photos never public (list)', (await req('GET', '/projects?limit=50')).data.projects.every((p) => p.documentImages === undefined));
   check('…not even for another member', (await req('GET', `/projects/${pid}`, { token: stranger.token })).data.project?.documentImages === undefined);
   check('admin sees the document photo (verification)', (await req('GET', '/admin/projects?status=approved', { token: admin })).data.projects.find((p) => p._id === pid)?.documentImages?.length === 1);
-  expectStatus('removing the last document photo is refused', await req('PUT', `/projects/${pid}`, { token: landOwner.token, form: { keepDocuments: '[]' } }), 400);
-  check('…and nothing was changed', (await req('GET', `/projects/${pid}`, { token: landOwner.token })).data.project?.documentImages?.length === 1);
 
   // Investors' requests
   const interest = { name: 'Investisseur Test', phone: '0555 98 76 54', email: 'invest@test.dz', amount: 50000000, message: 'Projet intéressant, je souhaite en discuter.' };

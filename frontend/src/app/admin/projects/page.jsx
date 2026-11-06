@@ -137,21 +137,6 @@ export default function AdminProjectsPage() {
                   </>
                 )}
                 {p.description && <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-gray-600">{p.description}</p>}
-                {/* Ownership document photos: private, for checking the property before publishing (none for an investor's search) */}
-                {!isCapital(p) && <div className="mt-3 rounded-xl bg-slate-50 p-3">
-                  <p className="text-xs font-bold text-gray-600">{t('Document de propriété')} : {documentLabel(p, t)}</p>
-                  {p.documentImages?.length ? (
-                    <div className="mt-2 flex gap-2">
-                      {p.documentImages.map((d, i) => (
-                        <a key={d.publicId} href={getImageUrl(d.url)} target="_blank" rel="noopener noreferrer" title={t('Ouvrir en grand')} className="block h-24 w-20 overflow-hidden rounded-lg ring-1 ring-slate-200 hover:ring-[#00B3D2]">
-                          <img src={getImageUrl(d.url)} alt={`${t('Document de propriété')} ${i + 1}`} className="h-full w-full object-cover" />
-                        </a>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="mt-1 text-xs text-amber-700">{t('Aucune photo du document.')}</p>
-                  )}
-                </div>}
                 <p className="mt-2 text-xs text-gray-500">{p.owner?.fullName} · {p.owner?.email}{p.owner?.phone ? ` · ${p.owner.phone}` : ''}</p>
                 {/* the publisher's contact for this listing: private, seen only here */}
                 {(p.contactPhone || p.contactEmail) && (

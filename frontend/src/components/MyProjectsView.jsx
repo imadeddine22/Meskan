@@ -19,8 +19,6 @@ import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
 const EMPTY = { assetType: 'Terrain', assetOther: '', title: '', description: '', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: '', city: '', address: '', area: '', areaMax: '', landDocument: 'Acte notarié', documentOther: '', budget: '', budgetMin: '', ownerShare: '', contactPhone: '', contactEmail: '' };
-const NO_DOCUMENT = 'En cours de régularisation'; // papers not ready: no document photo asked
-const MAX_DOCUMENTS = 2;
 
 const STATUS = {
   pending: { label: 'En attente de validation', icon: Clock, cls: 'bg-amber-50 text-amber-700' },
@@ -281,10 +279,6 @@ function ProjectForm({ project, kind = 'asset', user, onClose, onSaved }) {
   );
   const [keep, setKeep] = useState(project?.images || []);
   const [files, setFiles] = useState([]);
-  // photos of the ownership document (1–2), seen only by the owner and the admins
-  const [docKeep, setDocKeep] = useState(project?.documentImages || []);
-  const [docFiles, setDocFiles] = useState([]);
-  const docCount = docKeep.length + docFiles.length;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -308,17 +302,14 @@ function ProjectForm({ project, kind = 'asset', user, onClose, onSaved }) {
       if (!(Number(nums.area) > 0)) return setError(t('Indiquez la surface du bien.'));
       if (!project && files.length === 0) return setError(t('Ajoutez au moins une photo du bien.'));
       if (form.landDocument === 'Autre' && form.documentOther.trim().length < 2) return setError(t('Précisez le type de document.'));
-      if (form.landDocument !== NO_DOCUMENT && docCount === 0) return setError(t('Ajoutez une ou deux photos du document de propriété.'));
     }
     const fd = new FormData();
     Object.entries({ ...form, ...nums }).forEach(([k, v]) => fd.append(k, String(v ?? '').trim()));
     if (!project) fd.append('kind', kind);
     if (project) {
       fd.append('keepImages', JSON.stringify(keep.map((i) => i.publicId)));
-      fd.append('keepDocuments', JSON.stringify(docKeep.map((i) => i.publicId)));
     }
     files.forEach((f) => fd.append('images', f));
-    docFiles.forEach((f) => fd.append('documents', f));
     setSaving(true);
     try {
       if (project) await api.put(`/projects/${project._id}`, fd);
@@ -474,7 +465,7 @@ function ProjectForm({ project, kind = 'asset', user, onClose, onSaved }) {
 
           {/* An investor's search has no property yet: no document, no photos */}
           {!capital && (<>
-          {/* Ownership document: its type, then 1–2 photos for the admin's check (never shown to visitors) */}
+          {/* Ownership document: only its type (no photo asked) */}
           <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 sm:col-span-2">
             <p className="flex items-center gap-1.5 text-sm font-bold" style={{ color: PROJECT_COLORS.ink }}>
               <FileText className="h-4 w-4 text-[#00B3D2]" aria-hidden="true" /> {t('Document de propriété')}
@@ -493,39 +484,6 @@ function ProjectForm({ project, kind = 'asset', user, onClose, onSaved }) {
                 </label>
               )}
             </div>
-            {form.landDocument !== NO_DOCUMENT && (
-              <>
-                <p className={`${label} mt-3`}>{t('Photo du document (1 ou 2 : recto, verso)')} *</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {docKeep.map((img) => (
-                    <div key={img.publicId} className="relative h-24 w-20 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-                      <img src={getImageUrl(img.url)} alt={t('Document de propriété')} className="h-full w-full object-cover" />
-                      <button type="button" onClick={() => setDocKeep((k) => k.filter((x) => x.publicId !== img.publicId))} aria-label={t('Retirer la photo')} className="absolute end-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white">
-                        <X className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
-                  ))}
-                  {docFiles.map((file, i) => (
-                    <div key={`${file.name}-${i}`} className="relative h-24 w-20 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-                      <img src={URL.createObjectURL(file)} alt={t('Document de propriété')} className="h-full w-full object-cover" />
-                      <button type="button" onClick={() => setDocFiles((fs) => fs.filter((_, j) => j !== i))} aria-label={t('Retirer la photo')} className="absolute end-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white">
-                        <X className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
-                  ))}
-                  {docCount < MAX_DOCUMENTS && (
-                    <label className="grid h-24 w-20 cursor-pointer place-items-center rounded-xl border-2 border-dashed border-slate-300 bg-white text-slate-400 hover:border-[#00B3D2] hover:text-[#00B3D2]">
-                      <ImagePlus className="h-6 w-6" aria-hidden="true" />
-                      <span className="sr-only">{t('Ajouter la photo du document')}</span>
-                      <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { const picked = Array.from(e.target.files || []); setDocFiles((fs) => [...fs, ...picked].slice(0, MAX_DOCUMENTS - docKeep.length)); e.target.value = ''; }} />
-                    </label>
-                  )}
-                </div>
-                <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
-                  <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {t('Visible seulement par vous et l’administration, pour vérifier le bien. Jamais affichée aux visiteurs.')}
-                </p>
-              </>
-            )}
           </div>
 
           <div className="sm:col-span-2">
