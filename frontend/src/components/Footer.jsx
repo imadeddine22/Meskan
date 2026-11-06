@@ -27,7 +27,7 @@ const COLUMNS = [
       ['/my-bookings', 'Mes réservations'],
       ['/messages', 'Messages'],
       ['/favorites', 'Favoris'],
-      ['/profile', 'Mon profil'],
+      ['/profile', 'Mes informations personnelles'],
       ['/investor/projects', 'Mes projets'],
     ],
   },
