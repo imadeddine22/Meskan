@@ -1,6 +1,6 @@
 import { afterOwnerEdit } from '../utils/reviewPlugin.js';
 import mongoose from 'mongoose';
-import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, NO_DOCUMENT } from '../models/InvestmentProject.js';
+import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES } from '../models/InvestmentProject.js';
 import InvestorInterest from '../models/InvestorInterest.js';
 import { meskanContact } from '../utils/meskanContact.js';
 import User from '../models/User.js';
@@ -109,10 +109,7 @@ export const createProject = async (req, res, next) => {
     const kind = req.body.kind === 'capital' ? 'capital' : 'asset';
     // an investor's search has no property yet: no ownership document
     const docs = kind === 'capital' ? [] : documentsOf(req);
-    // a photo of the ownership document is needed for the admin's check (unless the papers are being regularised)
-    if (kind === 'asset' && req.user.role !== 'admin' && !docs.length && (req.body.landDocument || 'Acte notarié') !== NO_DOCUMENT) {
-      return res.status(400).json({ success: false, message: 'Add a photo of the property documents' });
-    }
+    // the ownership document is only named (landDocument): no photo is required
     const [images, documentImages] = await Promise.all([
       uploadMany(photosOf(req), 'dzhotels/projects'),
       uploadMany(docs.slice(0, MAX_DOCUMENTS), 'dzhotels/project-documents'),
@@ -152,9 +149,6 @@ export const updateProject = async (req, res, next) => {
     const newDocs = capital ? [] : documentsOf(req);
     if (keptDocs.length + newDocs.length > MAX_DOCUMENTS) {
       return res.status(400).json({ success: false, message: 'At most 2 photos of the documents' });
-    }
-    if (!capital && !admin && keepDocs && !keptDocs.length && !newDocs.length && (req.body.landDocument || project.landDocument) !== NO_DOCUMENT) {
-      return res.status(400).json({ success: false, message: 'Add a photo of the property documents' });
     }
     // a property keeps its commune and area (required); an investor's search may empty them
     if (!capital && (req.body.city === '' || req.body.area === '')) {
