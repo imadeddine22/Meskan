@@ -13,7 +13,7 @@ import { useInitialData } from '@/components/InitialData';
 import { COUNTRY_LIST, MULTI_COUNTRY, countryName } from '@/lib/countries';
 import { regionsFor } from '@/hooks/useWilayas';
 import { RENTAL_PERIODS } from '@/lib/rentals';
-const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
+const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Hangar'];
 // Static WILAYAS list removed, loaded dynamically via useWilayas hook.
 
 const MOCK = [

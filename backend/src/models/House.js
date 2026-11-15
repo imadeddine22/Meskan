@@ -43,7 +43,7 @@ const houseSchema = new mongoose.Schema(
     amenities: [{ type: String }],
     type: {
       type: String,
-      enum: ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Luxe', 'Affaires', 'Balnéaire', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'],
+      enum: ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Hangar', 'Luxe', 'Affaires', 'Balnéaire', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'],
       default: 'Maison',
     },
     suitableFor: [{ 
