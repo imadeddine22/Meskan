@@ -7,6 +7,7 @@ import { Mail } from 'lucide-react';
 import api from '@/lib/api';
 import { wilayaPath } from '@/lib/wilayaInfo';
 import { useT } from '@/lib/i18n/useT';
+import { useAuthStore } from '@/store/authStore';
 
 // Every link goes to a page that exists and has content (no duplicates of the navbar's
 // login, no placeholder contact details).
@@ -34,7 +35,7 @@ const COLUMNS = [
   {
     title: 'Propriétaires',
     links: [
-      ['/register?role=owner', 'Publier une annonce'],
+      [null, 'Publier une annonce'],
       ['/pricing', 'Tarifs'],
     ],
   },
@@ -63,6 +64,9 @@ const loadDestinations = () =>
 
 export default function Footer() {
   const { t } = useT();
+  const user = useAuthStore((s) => s.user);
+  // logged in: no sign-up, straight to the host space (the account switches to it)
+  const ownerHref = user ? '/owner/my-hotels' : '/register?role=owner';
   const [destinations, setDestinations] = useState([]);
 
   useEffect(() => {
@@ -92,10 +96,10 @@ export default function Footer() {
         </p>
         <div className="mt-8">
           <Link
-            href="/register?role=owner"
+            href={ownerHref}
             className="inline-block bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm rtl:text-base transition shadow-md hover:scale-102"
           >
-            {t('Commencer gratuitement')}
+            {user ? t('Publier mon établissement') : t('Commencer gratuitement')}
           </Link>
         </div>
       </div>
@@ -108,7 +112,7 @@ export default function Footer() {
               <h4 className={heading}>{t(col.title)}</h4>
               <ul className="space-y-3.5 text-sm md:text-base rtl:text-base rtl:md:text-lg font-semibold">
                 {col.links.map(([href, label]) => (
-                  <li key={href}><Link href={href} className={link}>{t(label)}</Link></li>
+                  <li key={label}><Link href={href || ownerHref} className={link}>{t(label)}</Link></li>
                 ))}
               </ul>
               {col.title === 'Meskan' && (
