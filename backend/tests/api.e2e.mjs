@@ -1219,6 +1219,23 @@ describe('"How did you hear about us?" (welcome notification)');
   expectStatus('only the admin reads the answers', await req('GET', '/admin/referrals', { token: cust.token }), 403);
 }
 
+describe('Admin resets a forgotten password');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const cust = await register('customer');
+  await new Promise((ok) => setTimeout(ok, 1100)); // session times are whole seconds
+  const r = await req('PUT', `/admin/users/${cust.user._id}/reset-password`, { token: admin });
+  check('admin gets a temporary password', r.status === 200 && /^[a-z2-9]{10}$/.test(r.data.tempPassword || ''), String(r.status));
+  expectStatus('old password no longer works', await req('POST', '/auth/login', { body: { email: cust.email, password: 'secret123' } }), 401);
+  const back = await req('POST', '/auth/login', { body: { email: cust.email, password: r.data.tempPassword } });
+  check('the customer logs in with the temporary password', back.status === 200 && !!back.data.token);
+  expectStatus('their old session is closed', await req('GET', '/auth/me', { token: cust.token }), 401);
+  const other = await register('customer');
+  expectStatus('only the admin can do it', await req('PUT', `/admin/users/${cust.user._id}/reset-password`, { token: other.token }), 403);
+  const adminUser = (await req('GET', '/auth/me', { token: admin })).data.user;
+  expectStatus('never on an admin account', await req('PUT', `/admin/users/${adminUser._id}/reset-password`, { token: admin }), 400);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

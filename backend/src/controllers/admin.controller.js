@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { parseDiscount } from '../utils/pricing.js';
 import { paging } from '../utils/query.js';
 import { parsePolicies } from '../utils/policies.js';
@@ -71,6 +72,26 @@ export const getUsers = async (req, res, next) => {
 };
 
 // PUT /admin/users/:id/block  — toggles blocked state
+// PUT /admin/users/:id/reset-password — the admin gives a customer who forgot their password a
+// temporary one (when no reset email can be sent). Returned once; the old sessions stop working.
+const TEMP_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789'; // no 0/o/1/l/i: easy to read out on the phone
+export const resetUserPassword = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id).select('+password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (user.role === 'admin') return res.status(400).json({ success: false, message: 'Cannot reset an admin password here' });
+    const bytes = crypto.randomBytes(10);
+    const tempPassword = Array.from(bytes, (b) => TEMP_CHARS[b % TEMP_CHARS.length]).join('');
+    user.password = tempPassword; // hashed by the model; passwordChangedAt ends the old sessions
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+    res.json({ success: true, tempPassword, user: { _id: user._id, fullName: user.fullName, email: user.email, phone: user.phone } });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const toggleBlockUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);

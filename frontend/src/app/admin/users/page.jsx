@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Ban, CheckCircle2, Trash2, Search, Users } from 'lucide-react';
+import { Ban, CheckCircle2, Trash2, Search, Users, KeyRound, Copy, Check, X } from 'lucide-react';
 import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
@@ -24,6 +24,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [reset, setReset] = useState(null); // { user, tempPassword } shown once after a password reset
+  const [copied, setCopied] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -51,6 +53,18 @@ export default function AdminUsersPage() {
     try {
       const { data } = await api.put(`/admin/users/${id}/block`);
       setUsers((u) => u.map((x) => (x._id === id ? { ...x, isBlocked: data.user.isBlocked } : x)));
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // Forgotten password without email: a temporary password the admin gives by phone / WhatsApp
+  const resetPassword = async (u) => {
+    if (!confirm(t('Créer un mot de passe temporaire pour {name} ? Son ancien mot de passe ne marchera plus.', { name: u.fullName }))) return;
+    try {
+      const { data } = await api.put(`/admin/users/${u._id}/reset-password`);
+      setCopied(false);
+      setReset({ user: data.user, tempPassword: data.tempPassword });
     } catch (e) {
       alert(e.message);
     }
@@ -180,6 +194,15 @@ export default function AdminUsersPage() {
                             )}
                           </button>
                           <button
+                            onClick={() => resetPassword(u)}
+                            className="admin-btn"
+                            style={{ padding: '6px 10px', fontSize: 12 }}
+                            title={t('Mot de passe oublié : en créer un temporaire')}
+                            aria-label={t('Mot de passe oublié : en créer un temporaire')}
+                          >
+                            <KeyRound style={{ width: 14, height: 14 }} />
+                          </button>
+                          <button
                             onClick={() => deleteUser(u._id, u.fullName)}
                             className="admin-btn admin-btn-danger"
                             style={{ padding: '6px 10px', fontSize: 12 }}
@@ -197,6 +220,36 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+      {reset && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-4" onClick={() => setReset(null)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="reset-title" onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <h2 id="reset-title" className="flex items-center gap-2 text-lg font-bold text-ink">
+                <KeyRound className="h-5 w-5 text-teal-600" aria-hidden="true" /> {t('Mot de passe temporaire')}
+              </h2>
+              <button type="button" onClick={() => setReset(null)} aria-label={t('Fermer')} className="grid h-8 w-8 place-items-center rounded-full hover:bg-gray-100">
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600">
+              {reset.user.fullName} · {reset.user.email}{reset.user.phone ? ` · ${reset.user.phone}` : ''}
+            </p>
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+              <code dir="ltr" className="flex-1 text-center text-2xl font-black tracking-widest text-ink">{reset.tempPassword}</code>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(reset.tempPassword).then(() => setCopied(true))}
+                className="inline-flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-2 text-sm font-bold text-white hover:bg-teal-700"
+              >
+                {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />} {copied ? t('Copié') : t('Copier')}
+              </button>
+            </div>
+            <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+              {t('Envoyez-le au client par téléphone ou WhatsApp. Il se connecte avec, puis le change dans « Mon profil ». Ce mot de passe ne sera plus affiché.')}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
