@@ -2,7 +2,7 @@
  * End-to-end API tests for every role: visitor, customer, hotel/house owner, seller, admin.
  *
  * Run against the in-memory demo server (never against production — it creates and deletes data):
- *   SMTP_HOST= RATE_LIMIT_MAX=5000 npm run dev:local   # terminal 1 (the suite sends several hundred requests)
+ *   SMTP_HOST= BREVO_API_KEY= RATE_LIMIT_MAX=5000 npm run dev:local   # terminal 1 (the suite sends several hundred requests)
  *   node tests/api.e2e.mjs              # terminal 2   (API_URL defaults to http://localhost:5000/api/v1)
  *
  */

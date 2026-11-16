@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
-import sendEmail from '../utils/sendEmail.js';
+import sendEmail, { emailConfigured } from '../utils/sendEmail.js';
 import { escapeHtml } from '../utils/escapeHtml.js';
 import { googleEnabled, verifyGoogleCredential } from '../utils/google.js';
 import { uploadBuffer, destroyImage } from '../utils/cloudinaryUpload.js';
@@ -180,7 +180,7 @@ export const forgotPassword = async (req, res, next) => {
       console.error('Reset email failed:', e.message);
     }
     // Local development without SMTP: the link is printed and returned so the flow can be tested
-    if (!process.env.SMTP_HOST && process.env.NODE_ENV !== 'production') {
+    if (!emailConfigured() && process.env.NODE_ENV !== 'production') {
       console.log(`🔑 Password reset link for ${user.email}: ${url}`);
       return res.json({ ...done, devResetUrl: url });
     }
