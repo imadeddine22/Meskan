@@ -17,7 +17,7 @@ import DiscountFields from '@/components/DiscountFields';
 import RentFeeNotice from '@/components/RentFeeNotice';
 import { RENTAL_PERIODS, periodOf, rentPrices } from '@/lib/rentals';
 // Was referenced but never defined → the page crashed on render. Same list as the House model enum.
-const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
+const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Hangar'];
 
 const emptyForm = {
   name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',

@@ -13,7 +13,7 @@ import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
 const HOTEL_TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
-const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
+const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Hangar'];
 
 export default function WilayaClient({ wilayaName, children }) {
   const { t } = useT();
