@@ -51,7 +51,7 @@ const COLUMNS = [
   },
 ];
 
-const SUPPORT_EMAIL = 'support@hotelsdz.dz';
+const SUPPORT_EMAIL = 'meskandz208@gmail.com';
 
 // Wilayas that really have listings (hotels + houses), most listings first; fetched once per page load.
 // The API counts them server-side: a few hundred bytes instead of 100 full listings.

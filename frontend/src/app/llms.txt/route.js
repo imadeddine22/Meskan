@@ -9,7 +9,7 @@ export function GET() {
 
 > Meskan est une plateforme algérienne et un intermédiaire immobilier : réserver des hôtels, louer des maisons et appartements (à la nuit, au mois ou à l'année), acheter des biens immobiliers et trouver un investisseur ou un projet, dans les 69 wilayas d'Algérie. Les annonces sont vérifiées par l'équipe avant publication. Les utilisateurs ne se contactent pas entre eux : ils contactent Meskan, qui met les deux parties en relation. La réservation d'hôtel est gratuite : le voyageur envoie une demande, l'établissement l'accepte, et le paiement se fait en dinars (DZD) sur place à l'arrivée.
 
-Langues : français (${SITE_URL}/), arabe (${SITE_URL}/ar) et anglais (${SITE_URL}/en) ; chaque page existe dans les trois langues (préfixe /ar ou /en). Pays couvert : Algérie (69 wilayas). Contact : support@hotelsdz.dz.
+Langues : français (${SITE_URL}/), arabe (${SITE_URL}/ar) et anglais (${SITE_URL}/en) ; chaque page existe dans les trois langues (préfixe /ar ou /en). Pays couvert : Algérie (69 wilayas). Contact : meskandz208@gmail.com.
 
 Wilaya pages use ASCII slugs: ${SITE_URL}/destinations/oran, ${SITE_URL}/destinations/bordj-bou-arreridj.
 
