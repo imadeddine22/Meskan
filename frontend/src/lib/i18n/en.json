@@ -1843,5 +1843,9 @@
   ": hôtels, maisons à louer, biens à vendre et projets.": ": hotels, houses for rent, properties for sale and projects.",
   "Aucun hôtel pour « {wilaya} » pour le moment.": "No hotels in “{wilaya}” yet.",
   "Hangar": "Hangar",
-  "Publier mon établissement": "List my property"
+  "Publier mon établissement": "List my property",
+  "Créer un mot de passe temporaire pour {name} ? Son ancien mot de passe ne marchera plus.": "Create a temporary password for {name}? Their old password will stop working.",
+  "Mot de passe oublié : en créer un temporaire": "Forgot password: create a temporary one",
+  "Mot de passe temporaire": "Temporary password",
+  "Envoyez-le au client par téléphone ou WhatsApp. Il se connecte avec, puis le change dans « Mon profil ». Ce mot de passe ne sera plus affiché.": "Send it to the customer by phone or WhatsApp. They log in with it, then change it in “My profile”. It will not be shown again."
 }

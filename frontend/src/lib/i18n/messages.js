@@ -1,6 +1,7 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'Cannot reset an admin password here': { fr: "Impossible de réinitialiser le mot de passe d’un administrateur ici.", ar: "لا يمكن إعادة تعيين كلمة سر مدير من هنا." },
   'Thank you for your answer': { fr: "Merci pour votre réponse.", ar: "شكرًا على إجابتك." },
   'Project not found': { fr: "Projet introuvable.", ar: "المشروع غير موجود." },
   'Project deleted': { fr: "Projet supprimé.", ar: "تم حذف المشروع." },

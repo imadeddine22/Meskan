@@ -1848,5 +1848,9 @@
   ": hôtels, maisons à louer, biens à vendre et projets.": ": الفنادق والمنازل للكراء والعقارات للبيع والمشاريع.",
   "Aucun hôtel pour « {wilaya} » pour le moment.": "لا توجد فنادق في «{wilaya}» حاليًا.",
   "Hangar": "لونقار",
-  "Publier mon établissement": "انشر مؤسستك"
+  "Publier mon établissement": "انشر مؤسستك",
+  "Créer un mot de passe temporaire pour {name} ? Son ancien mot de passe ne marchera plus.": "إنشاء كلمة سر مؤقتة لـ {name}؟ كلمة السر القديمة لن تعمل بعد الآن.",
+  "Mot de passe oublié : en créer un temporaire": "نسي كلمة السر: أنشئ واحدة مؤقتة",
+  "Mot de passe temporaire": "كلمة سر مؤقتة",
+  "Envoyez-le au client par téléphone ou WhatsApp. Il se connecte avec, puis le change dans « Mon profil ». Ce mot de passe ne sera plus affiché.": "أرسلها للزبون بالهاتف أو واتساب. يدخل بها ثم يغيّرها من «ملفي الشخصي». لن تظهر هذه الكلمة مرة أخرى."
 }

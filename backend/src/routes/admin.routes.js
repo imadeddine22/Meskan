@@ -5,6 +5,7 @@ import {
   rejectHotel,
   getUsers,
   toggleBlockUser,
+  resetUserPassword,
   getStats,
   getBookings,
   getAllHotels,
@@ -89,6 +90,7 @@ router.delete('/sales/:id', deleteSale);
 // Users
 router.get('/users', getUsers);
 router.put('/users/:id/block', toggleBlockUser);
+router.put('/users/:id/reset-password', resetUserPassword);
 router.delete('/users/:id', deleteUser);
 
 // Bookings

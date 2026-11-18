@@ -2,7 +2,7 @@
  * End-to-end API tests for every role: visitor, customer, hotel/house owner, seller, admin.
  *
  * Run against the in-memory demo server (never against production — it creates and deletes data):
- *   SMTP_HOST= RATE_LIMIT_MAX=5000 npm run dev:local   # terminal 1 (the suite sends several hundred requests)
+ *   SMTP_HOST= BREVO_API_KEY= RATE_LIMIT_MAX=5000 npm run dev:local   # terminal 1 (the suite sends several hundred requests)
  *   node tests/api.e2e.mjs              # terminal 2   (API_URL defaults to http://localhost:5000/api/v1)
  *
  */
@@ -1217,6 +1217,23 @@ describe('"How did you hear about us?" (welcome notification)');
   check('period filter', (await req('GET', '/admin/referrals?days=7', { token: admin })).data.total <= after.total);
   const cust = await register('customer');
   expectStatus('only the admin reads the answers', await req('GET', '/admin/referrals', { token: cust.token }), 403);
+}
+
+describe('Admin resets a forgotten password');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const cust = await register('customer');
+  await new Promise((ok) => setTimeout(ok, 1100)); // session times are whole seconds
+  const r = await req('PUT', `/admin/users/${cust.user._id}/reset-password`, { token: admin });
+  check('admin gets a temporary password', r.status === 200 && /^[a-z2-9]{10}$/.test(r.data.tempPassword || ''), String(r.status));
+  expectStatus('old password no longer works', await req('POST', '/auth/login', { body: { email: cust.email, password: 'secret123' } }), 401);
+  const back = await req('POST', '/auth/login', { body: { email: cust.email, password: r.data.tempPassword } });
+  check('the customer logs in with the temporary password', back.status === 200 && !!back.data.token);
+  expectStatus('their old session is closed', await req('GET', '/auth/me', { token: cust.token }), 401);
+  const other = await register('customer');
+  expectStatus('only the admin can do it', await req('PUT', `/admin/users/${cust.user._id}/reset-password`, { token: other.token }), 403);
+  const adminUser = (await req('GET', '/auth/me', { token: admin })).data.user;
+  expectStatus('never on an admin account', await req('PUT', `/admin/users/${adminUser._id}/reset-password`, { token: admin }), 400);
 }
 
 describe('No online payment');
