@@ -73,7 +73,7 @@ const siteLd = [
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/brand/meskan-mark.png`,
-    email: 'support@hotelsdz.dz',
+    email: 'meskandz208@gmail.com',
     areaServed: { '@type': 'Country', name: 'Algérie' },
     address: { '@type': 'PostalAddress', addressLocality: 'Alger', addressCountry: 'DZ' },
   },

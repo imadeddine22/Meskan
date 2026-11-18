@@ -72,7 +72,7 @@ export default function ContactPage() {
           {/* Contact info */}
           <div className="space-y-4">
             {[
-              { icon: Mail, title: 'Email', value: 'support@hotelsdz.dz' },
+              { icon: Mail, title: 'Email', value: 'meskandz208@gmail.com' },
               { icon: Phone, title: 'Téléphone', value: '+213 (0) 21 00 00 00' },
               { icon: MapPin, title: 'Adresse', value: t('Alger Centre, Alger, Algérie') },
             ].map((c) => (
